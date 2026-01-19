@@ -1,0 +1,13 @@
+{
+  "name": "komisi-sales",
+  "scripts": {
+    "dev": "bun run --hot src/main.ts"
+  },
+  "dependencies": {
+    "hono": "^4.11.4",
+    "mysql2": "^3.16.1"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  }
+}
