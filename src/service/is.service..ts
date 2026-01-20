@@ -46,56 +46,76 @@ export class IsService {
     }
 
     static async getInvoiceNusawork(employeeId: string, startDate: string, endDate: string, type: string) {
-        let query = `
-            SELECT * 
+        let baseQuery = `
+            SELECT 
+                nciit.*, 
+                nci.*, 
+                cit.*, 
+                cs.*, 
+                c.*, 
+                s.*,
+                (
+                    SELECT COUNT(*) 
+                    FROM CustomerServices cs2 
+                    JOIN Services s2 ON cs2.ServiceId = s2.ServiceId
+                    WHERE cs2.CustId = nci.CustId 
+                    AND cs2.CustStatus IN ('A', 'Active', 'T', 'Trial') 
+                    AND (
+                        s2.ServiceLevel IN ('GS', 'ZHP', 'M3', 'GCP') 
+                        OR s2.ServiceGroup = 'BS'
+                    )
+                ) as cross_sell_count
             FROM NewCustomerInvoiceInternetCounter nciit 
-            JOIN NewCustomerInvoice nci ON nciit.AI = nci.AI 
-            JOIN CustomerInvoiceTemp cit ON nci.Id = cit.InvoiceNum 
-            JOIN CustomerServices cs ON cs.CustId = nci.CustId 
-            JOIN Customer c ON c.CustId = nci.CustId
-            JOIN Services s ON cs.ServiceId = s.ServiceId
+            LEFT JOIN NewCustomerInvoice nci ON nciit.AI = nci.AI 
+            LEFT JOIN CustomerInvoiceTemp cit ON nci.Id = cit.InvoiceNum AND nci.No = cit.Urut
+            LEFT JOIN CustomerInvoiceTemp_Custom citc ON cit.InvoiceNum = citc.InvoiceNum AND cit.Urut = citc.Urut
+            LEFT JOIN CustomerServices cs ON cs.CustId = nci.CustId AND cs.ServiceId = cit.ServiceId
+            LEFT JOIN Customer c ON c.CustId = nci.CustId
+            LEFT JOIN Services s ON cs.ServiceId = s.ServiceId
             WHERE cit.ServiceId IN ('NWBUS', 'NWADV') 
             AND cs.SalesId = ?
-            AND InvoiceDate BETWEEN ? AND ?
+            AND IFNULL(citc.InvoiceDate, cit.InvoiceDate) BETWEEN ? AND ?
             AND nciit.new_subscription > 0 
             AND trx_date IS NOT NULL
         `;
 
-        // Cek jika type adalah 'booster', tambahkan kondisi tambahan
+        let whereClause = "";
+        let havingClause = "";
+        const groupByClause = ` GROUP BY nciit.AI `;
+
+        // Filter conditions (WHERE part)
         if (type === 'booster') {
-            query += `
-                AND s.ServiceLevel IN ('GS', 'ZHP', 'M3', 'GCP')
+            whereClause += `
                 AND (
-                    (nciit.counter = 1 AND nciit.is_prorata = false AND nciit.is_upgrade = false)
-                    OR (nciit.counter >= 1 AND nciit.is_prorata = true AND nciit.is_upgrade = false)
-                    OR (nciit.counter >= 1 AND nciit.is_prorata = false AND nciit.is_upgrade = true)
-                    OR (nciit.counter >= 1 AND nciit.is_prorata = true AND nciit.is_upgrade = true)
-                );
+                    (nciit.counter = 1 AND nciit.is_prorata = 0 AND nciit.is_upgrade = 0)
+                    OR (nciit.counter >= 1 AND nciit.is_prorata = 1 AND nciit.is_upgrade = 0)
+                    OR (nciit.counter >= 1 AND nciit.is_prorata = 0 AND nciit.is_upgrade = 1)
+                    OR (nciit.counter >= 1 AND nciit.is_prorata = 1 AND nciit.is_upgrade = 1)
+                )
             `;
-        } 
-
-        // Cek jika type adalah 'solo', maka eksklusi ServiceLevel tertentu
-        if (type === 'solo') {
-            query += `
-                AND s.ServiceLevel NOT IN ('GS', 'ZHP', 'M3', 'GCP')
+            havingClause += ` HAVING cross_sell_count > 0 `;
+        } else if (type === 'solo') {
+            whereClause += `
                 AND (
-                    (nciit.counter = 1 AND nciit.is_prorata = false AND nciit.is_upgrade = false)
-                    OR (nciit.counter >= 1 AND nciit.is_prorata = true AND nciit.is_upgrade = false)
-                    OR (nciit.counter >= 1 AND nciit.is_prorata = false AND nciit.is_upgrade = true)
-                    OR (nciit.counter >= 1 AND nciit.is_prorata = true AND nciit.is_upgrade = true)
-                );
+                    (nciit.counter = 1 AND nciit.is_prorata = 0 AND nciit.is_upgrade = 0)
+                    OR (nciit.counter >= 1 AND nciit.is_prorata = 1 AND nciit.is_upgrade = 0)
+                    OR (nciit.counter >= 1 AND nciit.is_prorata = 0 AND nciit.is_upgrade = 1)
+                    OR (nciit.counter >= 1 AND nciit.is_prorata = 1 AND nciit.is_upgrade = 1)
+                )
+            `;
+            havingClause += ` HAVING cross_sell_count = 0 `;
+        } else if (type === 'recurring') {
+            whereClause += `
+                AND nciit.counter > 1 
+                AND nciit.is_prorata = 0 
+                AND nciit.is_upgrade = 0
             `;
         }
 
-        // Cek jika type adalah 'recurring', tambahkan kondisi tambahan
-        if (type === 'recurring') {
-            query += `
-                AND nciit.counter > 1 AND nciit.is_prorata = false AND nciit.is_upgrade = false;
-            `;
-        }
+        const finalQuery = baseQuery + whereClause + groupByClause + havingClause;
 
         const [rows] = await pool.query({
-            sql: query,
+            sql: finalQuery,
             nestTables: true
         }, [employeeId, startDate, endDate]);
 
