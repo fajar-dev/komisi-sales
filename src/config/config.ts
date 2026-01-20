@@ -5,3 +5,7 @@ export const DB_USER = process.env.DB_USER
 export const DB_PASSWORD = process.env.DB_PASSWORD
 export const DB_NAME = process.env.DB_NAME
 export const DB_POOL = process.env.DB_POOL
+
+export const NUSAWORK_API_URL = process.env.NUSAWORK_API_URL
+export const NUSAWORK_CLIENT_ID = process.env.NUSAWORK_CLIENT_ID
+export const NUSAWORK_CLIENT_SECRET = process.env.NUSAWORK_CLIENT_SECRET
