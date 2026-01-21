@@ -1,5 +1,5 @@
 import { Context } from 'hono';
-import { IsService } from '../service/is.service.';
+import { IsService } from '../service/is.service';
 
 export class NusaworkController {
     static async comissionAccountManager(c: Context) {
@@ -31,6 +31,7 @@ export class NusaworkController {
                 "customerServiceId" : row.cs.CustServId,
                 "customerId" : row.c.CustId,
                 "customerCompany" : row.c.CustCompany,
+                "commissionPercentage" : commissionPercentage,
                 "commissionAmount" : commissionAmount,
             }
         });
@@ -40,4 +41,5 @@ export class NusaworkController {
             totalCommission
         });
     }
+
 }

@@ -59,7 +59,6 @@ export class IsService {
                     FROM CustomerServices cs2 
                     JOIN Services s2 ON cs2.ServiceId = s2.ServiceId
                     WHERE cs2.CustId = nci.CustId 
-                    AND cs2.CustStatus IN ('A', 'Active', 'T', 'Trial') 
                     AND (
                         s2.ServiceLevel IN ('GS', 'ZHP', 'M3', 'GCP') 
                         OR s2.ServiceGroup = 'BS'
@@ -75,7 +74,6 @@ export class IsService {
             WHERE cit.ServiceId IN ('NWBUS', 'NWADV') 
             AND cs.SalesId = ?
             AND IFNULL(citc.InvoiceDate, cit.InvoiceDate) BETWEEN ? AND ?
-            AND nciit.new_subscription > 0 
             AND trx_date IS NOT NULL
         `;
 
@@ -86,29 +84,18 @@ export class IsService {
         // Filter conditions (WHERE part)
         if (type === 'booster') {
             whereClause += `
-                AND (
-                    (nciit.counter = 1 AND nciit.is_prorata = 0 AND nciit.is_upgrade = 0)
-                    OR (nciit.counter >= 1 AND nciit.is_prorata = 1 AND nciit.is_upgrade = 0)
-                    OR (nciit.counter >= 1 AND nciit.is_prorata = 0 AND nciit.is_upgrade = 1)
-                    OR (nciit.counter >= 1 AND nciit.is_prorata = 1 AND nciit.is_upgrade = 1)
-                )
+                AND nciit.new_subscription > 0
             `;
             havingClause += ` HAVING cross_sell_count > 0 `;
         } else if (type === 'solo') {
             whereClause += `
-                AND (
-                    (nciit.counter = 1 AND nciit.is_prorata = 0 AND nciit.is_upgrade = 0)
-                    OR (nciit.counter >= 1 AND nciit.is_prorata = 1 AND nciit.is_upgrade = 0)
-                    OR (nciit.counter >= 1 AND nciit.is_prorata = 0 AND nciit.is_upgrade = 1)
-                    OR (nciit.counter >= 1 AND nciit.is_prorata = 1 AND nciit.is_upgrade = 1)
-                )
+                AND nciit.new_subscription > 0
             `;
             havingClause += ` HAVING cross_sell_count = 0 `;
         } else if (type === 'recurring') {
             whereClause += `
                 AND nciit.counter > 1 
-                AND nciit.is_prorata = 0 
-                AND nciit.is_upgrade = 0
+                AND nciit.new_subscription = 0
             `;
         }
 

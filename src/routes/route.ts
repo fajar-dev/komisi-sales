@@ -3,6 +3,6 @@ import { NusaworkController } from '../controller/nusawork.controller';
 
 const nusaworkRoute = new Hono();
 
-nusaworkRoute.get('/commission', NusaworkController.comissionAccountManager);
+nusaworkRoute.get('/sales', NusaworkController.comissionAccountManager);
 
 export default nusaworkRoute;
