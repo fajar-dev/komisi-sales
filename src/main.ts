@@ -1,14 +1,12 @@
 import { Hono } from 'hono'
 import { PORT } from './config/config';
-import { checkConnection } from './config/database';
 import { Nusawork } from './service/nusawork.service';
-  
+
 import route from './routes/route';
 
 const app = new Hono()
-checkConnection()
 
-app.route('/nusawork', route);
+app.route('/api', route);
 
 export default {
   port: PORT,

@@ -1,4 +1,12 @@
 export const PORT = process.env.PORT
+
+export const NIS_DB_HOST = process.env.NIS_DB_HOST
+export const NIS_DB_PORT = process.env.NIS_DB_PORT
+export const NIS_DB_USER = process.env.NIS_DB_USER
+export const NIS_DB_PASSWORD = process.env.NIS_DB_PASSWORD
+export const NIS_DB_NAME = process.env.NIS_DB_NAME
+export const NIS_DB_POOL = process.env.NIS_DB_POOL
+
 export const DB_HOST = process.env.DB_HOST
 export const DB_PORT = process.env.DB_PORT
 export const DB_USER = process.env.DB_USER

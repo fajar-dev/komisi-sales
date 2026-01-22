@@ -52,18 +52,18 @@ export class Nusawork {
     }
 
     /**
-     * Ambil daftar account manager dari Nusawork.
+     * Ambil daftar account manager digital business dari Nusawork.
      */
-    static async getAccountManager(): Promise<any[]> {
+    static async getSalesDigital(): Promise<any[]> {
         const employees = await this.getEmployees()
 
         const accountManager = employees.filter((emp: any) =>
             emp.organization_name === 'Sales Nusawork' 
             || emp.organization_name === 'Sales GWS'
-            || emp.organization_name === 'Nusawork'
         )
 
         return accountManager.map((emp: any) => ({
+            userId: emp.user_id,
             employeeId: emp.employee_id,
             name: emp.full_name,
             photoProfile: emp.photo_profile,
@@ -71,7 +71,7 @@ export class Nusawork {
             organizationName: emp.organization_name,
             jobLevel: emp.job_level,
             branch: emp.branch_name,
-            joinDate: emp.join_date,
+            managerId: emp.id_report_to_value,
         }))
     }
 }
