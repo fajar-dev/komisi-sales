@@ -1,28 +1,12 @@
 import { IsService } from '../service/is.service';
 import { InvoiceService } from '../service/invoice.service';
 import { format } from 'date-fns';
+import { period } from '../helper/period';
 
 export class InvoiceCrawl {
 
-    private static async getStartAndEndDateForCurrentMonth() {
-        const today = new Date();
-        const currentMonth = today.getMonth();
-        const currentYear = today.getFullYear();
-
-        const startMonth = currentMonth === 0 ? 11 : currentMonth - 1;
-        const startYear = currentMonth === 0 ? currentYear - 1 : currentYear;
-
-        const startDate = new Date(startYear, startMonth, 26);
-        const endDate = new Date(currentYear, currentMonth, 25);
-
-        return {
-            startDate: format(startDate, 'yyyy-MM-dd'),
-            endDate: format(endDate, 'yyyy-MM-dd')
-        };
-    }
-
     public static async crawlNusaworkInvoice() {
-        const { startDate, endDate } = await this.getStartAndEndDateForCurrentMonth();
+        const { startDate, endDate } = period.getStartAndEndDateForCurrentMonth()
         const rows = await IsService.getInvoiceNusaworkByDateRange(startDate, endDate);
 
         const commissionData: any[] = rows.map((row: any) => {

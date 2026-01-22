@@ -66,7 +66,7 @@ export class InvoiceService {
             WHERE sales_id = ?
             AND invoice_date BETWEEN ? AND ?
         `, [salesId, startDate, endDate]);
-        return rows;
+        return rows as any[];
     }
 
     static async getInvoiceByManagerSalesId(managerSalesId: string, startDate: string, endDate: string) {
