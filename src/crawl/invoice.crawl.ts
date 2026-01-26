@@ -1,64 +1,69 @@
 import { IsService } from '../service/is.service';
 import { InvoiceService } from '../service/invoice.service';
-import { format } from 'date-fns';
 import { period } from '../helper/period';
 
 export class InvoiceCrawl {
 
     public static async crawlNusaworkInvoice() {
-        const { startDate, endDate } = period.getStartAndEndDateForCurrentMonth()
+        const { startDate, endDate } = period.getStartAndEndDateForCurrentMonth();
         const rows = await IsService.getInvoiceNusaworkByDateRange(startDate, endDate);
 
-        const commissionData: any[] = rows.map((row: any) => {
+        const commissionData = rows.map((row: any) => {
             let isNew = false;
             let isUpgrade = false;
             let commissionPercentage = 0;
 
-            if (row.nciit.counter > 1 && row.nciit.new_subscription === "0.00") {
-                commissionPercentage = 1;
-            } else if (row.nciit.new_subscription > 0 && row[''].cross_sell_count > 0) {
-                commissionPercentage = 15;
-                if (row.nciit.is_prorata === 0 && row.nciit.is_upgrade === 0) {
-                    isNew = true;
-                }
-                if (row.nciit.is_upgrade === 1 || row.nciit.is_prorata === 1) {
-                    isUpgrade = true;
-                }
-            } else if (row.nciit.new_subscription > 0 && row[''].cross_sell_count === 0) {
-                if (row.nciit.is_upgrade === 1 || row.nciit.is_prorata === 1) {
-                    isUpgrade = true;
-                }
-                commissionPercentage = 12;
-                if (row.nciit.is_prorata === 0 && row.nciit.is_upgrade === 0) {
-                    isNew = true;
-                }
+            const newSubscription = Number(row.new_subscription ?? 0);
+            const crossSellCount = Number(row.cross_sell_count ?? 0);
+            const dpp = Number(row.dpp ?? 0);
+
+            if (row.counter > 1 && String(row.new_subscription) === "0.00") {
+            commissionPercentage = 1;
+            } else if (newSubscription > 0 && crossSellCount > 0) {
+            commissionPercentage = 15;
+
+            if (row.is_prorata === 0 && row.is_upgrade === 0) isNew = true;
+            if (row.is_upgrade === 1 || row.is_prorata === 1) isUpgrade = true;
+
+            } else if (newSubscription > 0 && crossSellCount === 0) {
+            commissionPercentage = 12;
+
+            if (row.is_upgrade === 1 || row.is_prorata === 1) isUpgrade = true;
+            if (row.is_prorata === 0 && row.is_upgrade === 0) isNew = true;
             }
 
-            const commissionAmount = row.nciit.dpp * (commissionPercentage / 100);
+            const commissionAmount = dpp * (commissionPercentage / 100);
+
+            let referral: string | null = null;
+            if (row.ResellerType === "employee" && row.ResellerTypeId != null) {
+            referral = row.ResellerTypeId;
+            }
 
             return {
-                ai: row.nciit?.AI,
-                invoiceNumber: row.cit?.InvoiceNum,
-                invoiceDate: row.cit?.InvoiceDate,
-                dpp: row.nciit?.dpp,
-                customerServiceId: row.cs?.CustServId,
-                customerId: row.c?.CustId,
-                customerCompany: row.c?.CustCompany,
-                serviceGroupId: row.s?.ServiceLevel,
-                serviceId: row.s?.ServiceId,
-                serviceName: row.s?.ServiceType,
-                salesId: row.cs?.SalesId,
-                managerSalesId: row.cs?.ManagerSalesId,
-                isNew,
-                isUpgrade,
-                commissionAmount,
-                commissionPercentage
+            ai: row.AI,
+            invoiceNumber: row.InvoiceNum,
+            invoiceDate: row.InvoiceDate,
+            dpp: dpp,
+            customerServiceId: row.CustServId,
+            customerId: row.CustId,
+            customerCompany: row.CustCompany,
+            serviceGroupId: row.ServiceLevel,
+            serviceId: row.ServiceId,
+            serviceName: row.ServiceType,
+            salesId: row.SalesId,
+            managerSalesId: row.ManagerSalesId,
+            isNew,
+            isUpgrade,
+            commissionAmount,
+            commissionPercentage,
+            referral
             };
         });
 
         for (const data of commissionData) {
             await InvoiceService.insertInvoice(data);
-            console.log("Invoice inserted: ", data.invoiceNumber);
+            console.log("Invoice inserted:", data.invoiceNumber);
         }
-    }
+        }
+
 }

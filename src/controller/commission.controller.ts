@@ -1,6 +1,7 @@
 import { Context } from 'hono';
 import { InvoiceService } from '../service/invoice.service';
 import { ApiResponseHandler } from '../helper/api-response';
+import { period } from '../helper/period';
 
 export class CommissionController {
 
@@ -67,12 +68,8 @@ export class CommissionController {
             let grandTotal = 0;
 
             for (let i = 0; i < 12; i++) {
-                const monthIndex = i;
-                const startDateObj = new Date(yearInt, monthIndex - 1, 26);
-                const endDateObj = new Date(yearInt, monthIndex, 25);
-
-                const startDate = startDateObj.toISOString().split('T')[0];
-                const endDate = endDateObj.toISOString().split('T')[0];
+                // Pakai helper
+                const { startDate, endDate } = period.getStartAndEndDateForMonth(yearInt, i);
 
                 const rows = await InvoiceService.getInvoiceBySales(employeeId, startDate, endDate);
 

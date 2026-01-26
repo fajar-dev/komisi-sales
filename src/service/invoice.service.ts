@@ -19,9 +19,10 @@ export class InvoiceService {
                 is_new,
                 is_upgrade,
                 commission_amount,
-                commission_percentage
+                commission_percentage,
+                referral
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON DUPLICATE KEY UPDATE
                 invoice_number = VALUES(invoice_number),
                 invoice_date = VALUES(invoice_date),
@@ -37,7 +38,8 @@ export class InvoiceService {
                 is_new = VALUES(is_new),
                 is_upgrade = VALUES(is_upgrade),
                 commission_amount = VALUES(commission_amount),
-                commission_percentage = VALUES(commission_percentage)
+                commission_percentage = VALUES(commission_percentage),
+                referral = VALUES(referral)
         `, [
             data.ai,
             data.invoiceNumber,
@@ -54,7 +56,8 @@ export class InvoiceService {
             data.isNew,
             data.isUpgrade,
             data.commissionAmount,
-            data.commissionPercentage
+            data.commissionPercentage,
+            data.referral
         ]);
         return rows;
     }

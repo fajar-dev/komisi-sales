@@ -3,22 +3,24 @@ import { nisPool } from "../config/nis.db"
 export class IsService {
 
     static async getInvoiceNusaworkByDateRange(startDate: string, endDate: string) {
+        console.log(startDate, endDate);
         let query = `
             SELECT 
                 nciit.AI, nciit.counter, nciit.new_subscription, nciit.dpp, nciit.is_prorata, nciit.is_upgrade,
                 cit.InvoiceNum, 
-                cit.InvoiceDate, 
+                IFNULL(citc.InvoiceDate, cit.InvoiceDate) as InvoiceDate, 
                 cs.CustServId, cs.SalesId, cs.ManagerSalesId,
                 c.CustId, c.CustCompany, 
                 s.ServiceId, s.ServiceType, s.ServiceLevel,
+                IFNULL(cs.ResellerType, c.ResellerType)   AS ResellerType,
+                IFNULL(cs.ResellerTypeId, c.ResellerId)   AS ResellerTypeId,
                 (
                     SELECT COUNT(*) 
                     FROM CustomerServices cs2 
                     JOIN Services s2 ON cs2.ServiceId = s2.ServiceId
                     WHERE cs2.CustId = nci.CustId 
                     AND (
-                        s2.ServiceLevel IN ('GS', 'ZHP', 'M3', 'GCP') 
-                        OR s2.ServiceGroup = 'BS'
+                        s2.ServiceLevel IN ('GS', 'ZHP', 'M3', 'GCP', 'WL', 'FD', 'WL', 'SLBP') 
                     )
                 ) as cross_sell_count
             FROM NewCustomerInvoiceInternetCounter nciit 
@@ -36,7 +38,6 @@ export class IsService {
 
         const [rows] = await nisPool.query({
             sql: query,
-            nestTables: true
         }, [startDate, endDate]);
 
         return rows as any[];

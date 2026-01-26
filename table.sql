@@ -15,6 +15,7 @@ CREATE TABLE invoices (
     is_upgrade BOOLEAN NOT NULL,
     commission_amount DECIMAL(15, 2) NOT NULL,
     commission_percentage DECIMAL(5, 2) NOT NULL
+    reseller VARCHAR(20) NULL,
 );
 
 CREATE TABLE sales (
