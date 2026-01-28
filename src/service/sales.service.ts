@@ -38,23 +38,22 @@ export class SalesService {
         return rows;
     }
 
-    static async getSalesNusawork() {
+    static async getManager() {
         const [rows] = await pool.query(`
             SELECT *
             FROM sales
-            WHERE job_position = 'Account Manager' 
-            AND organization_name = 'Sales Nusawork'
+            WHERE job_level = 'Manager'
         `);
         return rows;
     }
 
-    static async getSalesGWS() {
+    static async getStaff(managerId: string) {
         const [rows] = await pool.query(`
             SELECT *
             FROM sales
-            WHERE job_position = 'Account Manager' 
-            AND organization_name = 'Sales GWS'
-        `);
+            WHERE manager_id = ?
+            AND job_level = 'staff'
+        `, [managerId]);
         return rows;
     }
 }

@@ -1,21 +1,25 @@
-CREATE TABLE invoices (
+CREATE TABLE internal_snapshot (
     ai INT PRIMARY KEY,
-    invoice_number BIGINT NOT NULL,
-    invoice_date TIMESTAMP NOT NULL,
-    dpp DECIMAL(15, 2) NOT NULL,
-    customer_service_id INT NOT NULL,
-    customer_id VARCHAR(20) NOT NULL,
-    customer_company VARCHAR(255) NOT NULL,
-    service_group_id VARCHAR(20) NOT NULL,
-    service_id VARCHAR(20) NOT NULL,
-    service_name VARCHAR(255) NOT NULL,
-    sales_id VARCHAR(20) NOT NULL,
-    manager_sales_id VARCHAR(20) NOT NULL,
-    is_new BOOLEAN NOT NULL,
-    is_upgrade BOOLEAN NOT NULL,
-    commission_amount DECIMAL(15, 2) NOT NULL,
-    commission_percentage DECIMAL(5, 2) NOT NULL
-    reseller VARCHAR(20) NULL,
+    invoice_number BIGINT NULL,
+    invoice_date TIMESTAMP NULL,
+    dpp DECIMAL(15, 2) NULL,
+    description TEXT NULL,
+    customer_service_id INT NULL,
+    customer_id VARCHAR(20) NULL,
+    customer_company VARCHAR(255) NULL,
+    service_group_id VARCHAR(20) NULL,
+    service_id VARCHAR(20) NULL,
+    service_name VARCHAR(255) NULL,
+    sales_id VARCHAR(20) NULL,
+    manager_sales_id VARCHAR(20) NULL,
+    is_new BOOLEAN NOT NULL DEFAULT false,
+    is_upgrade BOOLEAN NOT NULL DEFAULT false,
+    is_termin BOOLEAN NOT NULL DEFAULT false,
+    implementator_id VARCHAR(20) NULL,
+    sales_commission DECIMAL(15, 2) NULL,
+    sales_commission_percentage DECIMAL(5, 2) NULL,
+    referral_id VARCHAR(20) NULL,
+    cross_sell_count INT DEFAULT 0
 );
 
 CREATE TABLE sales (
