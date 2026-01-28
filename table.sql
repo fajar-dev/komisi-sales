@@ -22,8 +22,8 @@ CREATE TABLE internal_snapshot (
     cross_sell_count INT DEFAULT 0
 );
 
-CREATE TABLE sales (
-    user_id INT PRIMARY KEY,                
+CREATE TABLE employee (
+    id INT PRIMARY KEY,                
     employee_id VARCHAR(20) NOT NULL,         
     name VARCHAR(255) NOT NULL,               
     photo_profile VARCHAR(255),               

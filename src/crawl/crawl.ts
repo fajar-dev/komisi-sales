@@ -1,5 +1,5 @@
 import { SnapshotCrawl } from "./snapshot.crawl";
-import { SalesCrawl } from "./sales.crawl";
+import { EmployeeCrawl } from "./employee.crawl";
 
 class Crawl {
     public static async run() {
@@ -7,9 +7,9 @@ class Crawl {
             console.log("Starting the invoice crawl...");
             await SnapshotCrawl.crawlInternalInvoice();
             console.log("Invoice crawl finished.");
-            console.log("Starting the sales crawl...");
-            await SalesCrawl.crawlSales();
-            console.log("Sales crawl finished.");
+            console.log("Starting the employee crawl...");
+            await EmployeeCrawl.crawlEmployee();
+            console.log("Employee crawl finished.");
             process.exit(0); 
         } catch (error) {
             console.error("Error running the crawl:", error);

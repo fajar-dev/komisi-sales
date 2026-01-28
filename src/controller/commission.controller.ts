@@ -2,7 +2,7 @@ import { Context } from 'hono';
 import { snapshotService } from '../service/snapshot.service';
 import { ApiResponseHandler } from '../helper/api-response';
 import { IsService } from '../service/is.service';
-import { SalesService } from '../service/sales.service';
+import { EmployeeService } from '../service/employee.service';
 
 import { CommissionHelper } from '../helper/commission.helper';
 
@@ -139,13 +139,13 @@ export class CommissionController {
             const { employeeId, year } = c.req.query();
             const yearInt = parseInt(year as string);
 
-            const managerRows: any = await SalesService.getManagerById(employeeId);
+            const managerRows: any = await EmployeeService.getManagerById(employeeId);
             if (!managerRows || managerRows.length === 0) {
                  return c.json(ApiResponseHandler.error('Manager not found', ''));
             }
             const manager = managerRows[0];
             
-            const staffRows = await SalesService.getStaff(manager.user_id) as any[];
+            const staffRows = await EmployeeService.getStaff(manager.id) as any[];
             const staffIds = staffRows.map((s: any) => s.employee_id);
 
             const result = await CommissionHelper.processAnnualCommission(yearInt, async (startDate, endDate) => {

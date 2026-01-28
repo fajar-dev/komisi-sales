@@ -1,10 +1,10 @@
 import { pool } from "../config/database"
 
-export class SalesService {
-    static async insertSales(data: any) {
+export class EmployeeService {
+    static async insertEmployee(data: any) {
         const [rows] = await pool.query(`
-            INSERT INTO sales (
-                user_id,
+            INSERT INTO employee (
+                id,
                 employee_id,
                 name,
                 photo_profile,
@@ -41,7 +41,7 @@ export class SalesService {
     static async getManager() {
         const [rows] = await pool.query(`
             SELECT *
-            FROM sales
+            FROM employee
             WHERE job_level = 'Manager'
         `);
         return rows;
@@ -50,7 +50,7 @@ export class SalesService {
     static async getManagerById(employeeId: string) {
         const [rows] = await pool.query(`
             SELECT *
-            FROM sales
+            FROM employee
             WHERE employee_id = ?
         `, [employeeId]);
         return rows;
@@ -59,7 +59,7 @@ export class SalesService {
     static async getStaff(managerId: string) {
         const [rows] = await pool.query(`
             SELECT *
-            FROM sales
+            FROM employee
             WHERE manager_id = ?
         `, [managerId]);
         return rows;

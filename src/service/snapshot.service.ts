@@ -103,7 +103,7 @@ export class snapshotService {
         const [rows] = await pool.query(`
             SELECT *
             FROM internal_snapshot
-            JOIN sales ON internal_snapshot.sales_id = sales.employee_id
+            JOIN employee ON internal_snapshot.sales_id = employee.employee_id
             WHERE manager_sales_id = ?
             AND invoice_date BETWEEN ? AND ?
         `, [managerSalesId, startDate, endDate]);
@@ -117,9 +117,9 @@ export class snapshotService {
         const placeholders = salesIds.map(() => '?').join(',');
         
         const [rows] = await pool.query(`
-            SELECT internal_snapshot.*, sales.name 
+            SELECT internal_snapshot.*, employee.name 
             FROM internal_snapshot
-            LEFT JOIN sales ON internal_snapshot.sales_id = sales.employee_id
+            LEFT JOIN employee ON internal_snapshot.sales_id = employee.employee_id
             WHERE internal_snapshot.sales_id IN (${placeholders})
             AND internal_snapshot.invoice_date BETWEEN ? AND ?
         `, [...salesIds, startDate, endDate]);

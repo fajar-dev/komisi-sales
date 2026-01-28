@@ -59,7 +59,8 @@ export class Nusawork {
 
         const accountManager = employees.filter((emp: any) =>
             emp.organization_name === 'Sales Nusawork' 
-            || emp.organization_name === 'Sales GWS'
+            || emp.organization_name === 'Sales GWS' 
+            || emp.organization_name === 'Nusawork'
         )
 
         return accountManager.map((emp: any) => ({
