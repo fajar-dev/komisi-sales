@@ -103,20 +103,27 @@ export class snapshotService {
         const [rows] = await pool.query(`
             SELECT *
             FROM internal_snapshot
+            JOIN sales ON internal_snapshot.sales_id = sales.employee_id
             WHERE manager_sales_id = ?
             AND invoice_date BETWEEN ? AND ?
         `, [managerSalesId, startDate, endDate]);
         return rows;
     }
 
-    static async getSnapshotBySalesIdAndManagerSalesId(salesId: string, managerSalesId: string, startDate: string, endDate: string) {
+    static async getSnapshotBySalesIds(salesIds: string[], startDate: string, endDate: string) {
+        if (salesIds.length === 0) return [];
+        
+        // Create placeholders for IN clause
+        const placeholders = salesIds.map(() => '?').join(',');
+        
         const [rows] = await pool.query(`
-            SELECT *
+            SELECT internal_snapshot.*, sales.name 
             FROM internal_snapshot
-            WHERE sales_id = ?
-            AND manager_sales_id = ?
-            AND invoice_date BETWEEN ? AND ?
-        `, [salesId, managerSalesId, startDate, endDate]);
-        return rows;
+            LEFT JOIN sales ON internal_snapshot.sales_id = sales.employee_id
+            WHERE internal_snapshot.sales_id IN (${placeholders})
+            AND internal_snapshot.invoice_date BETWEEN ? AND ?
+        `, [...salesIds, startDate, endDate]);
+        
+        return rows as any[];
     }
 }

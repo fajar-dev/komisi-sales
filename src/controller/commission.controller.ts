@@ -1,27 +1,18 @@
 import { Context } from 'hono';
 import { snapshotService } from '../service/snapshot.service';
 import { ApiResponseHandler } from '../helper/api-response';
-import { period } from '../helper/period';
 import { IsService } from '../service/is.service';
+import { SalesService } from '../service/sales.service';
+
+import { CommissionHelper } from '../helper/commission.helper';
 
 export class CommissionController {
     static async internalCommission(c: Context) {
         try {
             const { employeeId, year } = c.req.query();
-
             const yearInt = parseInt(year as string);
-            const months = [
-                "January", "February", "March", "April", "May", "June",
-                "July", "August", "September", "October", "November", "December"
-            ];
 
-            const data: any[] = [];
-            let grandTotal = 0;
-
-            for (let i = 0; i < 12; i++) {
-                // Pakai helper
-                const { startDate, endDate } = period.getStartAndEndDateForMonth(yearInt, i);
-
+            const result = await CommissionHelper.processAnnualCommission(yearInt, async (startDate, endDate) => {
                 const rows = await snapshotService.getSnapshotBySales(employeeId, startDate, endDate);
 
                 let soloCount = 0;
@@ -48,10 +39,9 @@ export class CommissionController {
                 });
 
                 const monthTotal = soloTotal + boosterTotal + recurringTotal;
-                grandTotal += monthTotal;
 
-                data.push({
-                    month: months[i],
+                return {
+                    total: Math.round(monthTotal * 100) / 100,
                     detail: [
                         {
                             name: "Solo",
@@ -68,17 +58,11 @@ export class CommissionController {
                             count: recurringCount,
                             total: Math.round(recurringTotal * 100) / 100
                         }
-                    ],
-                    total: Math.round(monthTotal * 100) / 100
-                });
-            }
-
-            const response = {
-                total: Math.round(grandTotal * 100) / 100,
-                data: data
-            };
+                    ]
+                };
+            });
             
-            return c.json(ApiResponseHandler.success("Count retrived successfuly", response));
+            return c.json(ApiResponseHandler.success("Count retrived successfuly", result));
             
         } catch (error: any) {
             return c.json(ApiResponseHandler.error('Failed to retrieve commission chart data', error.message));
@@ -89,17 +73,8 @@ export class CommissionController {
         try {
             const { employeeId, year } = c.req.query();
             const yearInt = parseInt(year as string);
-            const months = [
-                "January", "February", "March", "April", "May", "June",
-                "July", "August", "September", "October", "November", "December"
-            ];
 
-            const data: any[] = [];
-            let grandTotal = 0;
-
-            for (let i = 0; i < 12; i++) {
-                const { startDate, endDate } = period.getStartAndEndDateForMonth(yearInt, i);
-
+            const result = await CommissionHelper.processAnnualCommission(yearInt, async (startDate, endDate) => {
                 const rows = await snapshotService.getSnapshotByImplementator(employeeId, startDate, endDate);
                 const churnCount = await IsService.getCustomerNaByImplementator(employeeId, startDate, endDate)
                 
@@ -115,18 +90,13 @@ export class CommissionController {
                     const commissionPercentage = parseFloat(row.sales_commission_percentage);
                     
                     if (commissionPercentage === 1) {
-                        // Recurring: 1% dari DPP
                         recurringCount++;
                         recurringTotal += dpp * 0.01;
                     } else {
-                        // One Time (Base + potentially Booster)
-                        
                         if (churnCount > 0) {
-                            // Base Commission Only (17.5%)
                             baseCommissionCount++;
                             baseCommissionTotal += dpp * 0.175;
                         } else {
-                            // Retention Booster (Base + Booster = 20%)
                             retentionBoosterCount++;
                             retentionBoosterTotal += dpp * 0.20;
                         }
@@ -134,10 +104,9 @@ export class CommissionController {
                 });
 
                 const monthTotal = baseCommissionTotal + retentionBoosterTotal + recurringTotal;
-                grandTotal += monthTotal;
 
-                data.push({
-                    month: months[i],
+                return {
+                    total: Math.round(monthTotal * 100) / 100,
                     detail: [
                         {
                             name: "Base Commission",
@@ -154,21 +123,82 @@ export class CommissionController {
                             count: recurringCount,
                             total: Math.round(recurringTotal * 100) / 100
                         }
-                    ],
-                    total: Math.round(monthTotal * 100) / 100
-                });
-            }
-
-            const response = {
-                total: Math.round(grandTotal * 100) / 100,
-                data: data
-            };
+                    ]
+                };
+            });
             
-            return c.json(ApiResponseHandler.success("Count retrived successfuly", response));
+            return c.json(ApiResponseHandler.success("Count retrived successfuly", result));
             
         } catch (error: any) {
             return c.json(ApiResponseHandler.error('Failed to retrieve commission chart data', error.message));
         }
     }
 
+    static async managerCommission(c: Context) {
+        try {
+            const { employeeId, year } = c.req.query();
+            const yearInt = parseInt(year as string);
+
+            const managerRows: any = await SalesService.getManagerById(employeeId);
+            if (!managerRows || managerRows.length === 0) {
+                 return c.json(ApiResponseHandler.error('Manager not found', ''));
+            }
+            const manager = managerRows[0];
+            
+            const staffRows = await SalesService.getStaff(manager.user_id) as any[];
+            const staffIds = staffRows.map((s: any) => s.employee_id);
+
+            const result = await CommissionHelper.processAnnualCommission(yearInt, async (startDate, endDate) => {
+                let rows: any[] = [];
+                if (staffIds.length > 0) {
+                    rows = await snapshotService.getSnapshotBySalesIds(staffIds, startDate, endDate);
+                }
+
+                const salesMap = new Map<string, { name: string, count: number, total: number }>();
+
+                staffRows.forEach((staff: any) => {
+                    const name = staff.name || staff.employee_id;
+                    salesMap.set(name, { name: name, count: 0, total: 0 });
+                });
+
+                (rows as any[]).forEach((row: any) => {
+                    const salesName = row.name || row.sales_id; 
+                    const commissionAmount = parseFloat(row.sales_commission || 0);
+
+                    if (salesMap.has(salesName)) {
+                         const salesData = salesMap.get(salesName)!;
+                         salesData.count++;
+                         salesData.total += commissionAmount;
+                    } else {
+                         salesMap.set(salesName, { name: salesName, count: 1, total: commissionAmount });
+                    }
+                });
+
+                const detail: any[] = [];
+                let monthTotal = 0;
+
+                salesMap.forEach((value) => {
+                    const roundedTotal = Math.round(value.total * 100) / 100;
+                    detail.push({
+                        name: value.name,
+                        count: value.count,
+                        total: roundedTotal
+                    });
+                    monthTotal += roundedTotal;
+                });
+                
+                const managerMonthCommission = Math.round((monthTotal * 0.25) * 100) / 100;
+
+                return {
+                    total: managerMonthCommission,
+                    detail: detail
+                };
+            });
+            
+            return c.json(ApiResponseHandler.success("Count retrived successfuly", result));
+            
+        } catch (error: any) {
+            return c.json(ApiResponseHandler.error('Failed to retrieve commission chart data', error.message));
+        }
+    }
 }

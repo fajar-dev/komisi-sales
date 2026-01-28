@@ -47,12 +47,20 @@ export class SalesService {
         return rows;
     }
 
+    static async getManagerById(employeeId: string) {
+        const [rows] = await pool.query(`
+            SELECT *
+            FROM sales
+            WHERE employee_id = ?
+        `, [employeeId]);
+        return rows;
+    }
+
     static async getStaff(managerId: string) {
         const [rows] = await pool.query(`
             SELECT *
             FROM sales
             WHERE manager_id = ?
-            AND job_level = 'staff'
         `, [managerId]);
         return rows;
     }
