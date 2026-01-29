@@ -14,7 +14,7 @@ export const authMiddleware = async (c: Context, next: Next) => {
         const token = authHeader.split(' ')[1];
         try {
             const payload = await verify(token, JWT_SECRET!, 'HS256');
-            c.set('user', payload); // Optional: Set user payload in context for downstream use
+            c.set('user', payload);
             await next();
         } catch (err) {
              return c.json(ApiResponseHandler.error('Invalid or expired token'), 401);

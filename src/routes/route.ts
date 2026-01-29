@@ -3,6 +3,7 @@ import { CommissionController } from '../controller/commission.controller';
 import { AuthController } from '../controller/auth.controller';
 
 import { authMiddleware } from '../middleware/auth.middleware';
+import { EmployeeController } from '../controller/employee.controller';
 
 const route = new Hono();
 
@@ -13,8 +14,15 @@ route.get('/auth/me', (c) => authController.me(c));
 route.post('/auth/logout', (c) => authController.logout(c));
 
 
-route.get('internal/commission', authMiddleware, (c) => new CommissionController().internalCommission(c));
-route.get('implementator/commission', authMiddleware, (c) => new CommissionController().implementatorCommission(c));
-route.get('manager/commission', authMiddleware, (c) => new CommissionController().managerCommission(c));
+import { hierarchyMiddleware } from '../middleware/hierarchy.middleware';
+
+route.get('internal/:id/commission', authMiddleware, hierarchyMiddleware, (c) => new CommissionController().internalCommission(c));
+route.get('implementator/:id/commission', authMiddleware, hierarchyMiddleware, (c) => new CommissionController().implementatorCommission(c));
+route.get('manager/:id/commission', authMiddleware, hierarchyMiddleware, (c) => new CommissionController().managerCommission(c));
+
+
+route.get('employee/:id', authMiddleware, (c) => new EmployeeController().getEmployeeByEmployeeId(c));
+route.get('employee/:id/hierarchy', (c) => new EmployeeController().getEmployeeHierarchy(c));
+
 
 export default route;

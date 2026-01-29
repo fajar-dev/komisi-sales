@@ -85,7 +85,6 @@ export class AuthController {
                 const payload = await verify(refreshToken, this.jwtSecret!, 'HS256');
                 const email = payload.email as string;
                 
-                // Optional: Check if user still exists/active
                 const employee = await this.employeeService.getEmployeeByEmail(email) as any;
                 if (!employee) {
                     return c.json(this.apiResponse.error('User not found'), 401);
@@ -98,10 +97,16 @@ export class AuthController {
                     role: employee.job_position,
                     exp: now + 60 * 15, // 15 minutes
                 };
+                const newRefreshTokenPayload = {
+                    sub: employee.employee_id,
+                    email: employee.email,
+                    exp: now + 60 * 60 * 24 * 7, // 7 days
+                };
 
                 const accessToken = await sign(newAccessTokenPayload, this.jwtSecret!);
+                const newRefreshToken = await sign(newRefreshTokenPayload, this.jwtSecret!);
 
-                return c.json(this.apiResponse.success("Token refreshed", { accessToken }));
+                return c.json(this.apiResponse.success("Token refreshed", { accessToken, refreshToken: newRefreshToken }));
 
             } catch (err) {
                 return c.json(this.apiResponse.error('Invalid refresh token'), 401);

@@ -16,7 +16,8 @@ export class CommissionController {
 
     async internalCommission(c: Context) {
         try {
-            const { employeeId, year } = c.req.query();
+            const employeeId = c.req.param('id');
+            const { year } = c.req.query();
             const yearInt = parseInt(year as string);
 
             const result = await this.commissionHelper.processAnnualCommission(yearInt, async (startDate, endDate) => {
@@ -78,7 +79,8 @@ export class CommissionController {
 
     async implementatorCommission(c: Context) {
         try {
-            const { employeeId, year } = c.req.query();
+            const employeeId = c.req.param('id');
+            const { year } = c.req.query();
             const yearInt = parseInt(year as string);
 
             const result = await this.commissionHelper.processAnnualCommission(yearInt, async (startDate, endDate) => {
@@ -143,7 +145,8 @@ export class CommissionController {
 
     async managerCommission(c: Context) {
         try {
-            const { employeeId, year } = c.req.query();
+            const employeeId = c.req.param('id');
+            const { year } = c.req.query();
             const yearInt = parseInt(year as string);
 
             const managerRows: any = await this.employeeService.getManagerById(employeeId);
