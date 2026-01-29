@@ -1,12 +1,17 @@
 import { IsService } from '../service/is.service';
-import { snapshotService } from '../service/snapshot.service';
+import { SnapshotService } from '../service/snapshot.service';
 import { period } from '../helper/period';
 
 export class SnapshotCrawl {
+    constructor(
+        private isService = IsService,
+        private snapshotService = SnapshotService,
+        private periodHelper = period
+    ) {}
 
-    public static async crawlInternalInvoice() {
-        const { startDate, endDate } = period.getStartAndEndDateForCurrentMonth();
-        const rows = await IsService.getInvoiceNusaworkByDateRange(startDate, endDate);
+    async crawlInternalInvoice() {
+        const { startDate, endDate } = this.periodHelper.getStartAndEndDateForCurrentMonth();
+        const rows = await this.isService.getInvoiceNusaworkByDateRange(startDate, endDate);
 
         const commissionData = rows.map((row: any) => {
             let isNew = false;
@@ -86,7 +91,7 @@ export class SnapshotCrawl {
         });
 
         for (const data of commissionData) {
-            await snapshotService.insertSnapshot(data);
+            await this.snapshotService.insertSnapshot(data);
             console.log("Invoice inserted:", data.invoiceNumber);
         }
     }

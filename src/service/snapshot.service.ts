@@ -1,6 +1,6 @@
 import { pool } from "../config/database"
 
-export class snapshotService {
+export class SnapshotService {
     static async insertSnapshot(data: any) {
         const [rows] = await pool.query(
             `

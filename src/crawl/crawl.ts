@@ -2,13 +2,18 @@ import { SnapshotCrawl } from "./snapshot.crawl";
 import { EmployeeCrawl } from "./employee.crawl";
 
 class Crawl {
-    public static async run() {
+    constructor(
+        private snapshotCrawl = new SnapshotCrawl(),
+        private employeeCrawl = new EmployeeCrawl()
+    ) {}
+    
+    async run() {
         try {
             console.log("Starting the invoice crawl...");
-            await SnapshotCrawl.crawlInternalInvoice();
+            await this.snapshotCrawl.crawlInternalInvoice();
             console.log("Invoice crawl finished.");
             console.log("Starting the employee crawl...");
-            await EmployeeCrawl.crawlEmployee();
+            await this.employeeCrawl.crawlEmployee();
             console.log("Employee crawl finished.");
             process.exit(0); 
         } catch (error) {
@@ -18,4 +23,4 @@ class Crawl {
     }
 }
 
-Crawl.run();
+new Crawl().run();

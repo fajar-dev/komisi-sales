@@ -17,3 +17,10 @@ export const DB_POOL = process.env.DB_POOL
 export const NUSAWORK_API_URL = process.env.NUSAWORK_API_URL
 export const NUSAWORK_CLIENT_ID = process.env.NUSAWORK_CLIENT_ID
 export const NUSAWORK_CLIENT_SECRET = process.env.NUSAWORK_CLIENT_SECRET
+
+export const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID
+export const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET
+
+export const JWT_SECRET = process.env.JWT_SECRET
+
+

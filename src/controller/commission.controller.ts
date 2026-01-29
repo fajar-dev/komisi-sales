@@ -1,19 +1,26 @@
 import { Context } from 'hono';
-import { snapshotService } from '../service/snapshot.service';
 import { ApiResponseHandler } from '../helper/api-response';
 import { IsService } from '../service/is.service';
 import { EmployeeService } from '../service/employee.service';
-
 import { CommissionHelper } from '../helper/commission.helper';
+import { SnapshotService } from '../service/snapshot.service';
 
 export class CommissionController {
-    static async internalCommission(c: Context) {
+    constructor(
+        private snapshotService = SnapshotService,  
+        private employeeService = EmployeeService,
+        private isService = IsService,
+        private commissionHelper = CommissionHelper,
+        private apiResponse = ApiResponseHandler,
+    ) {}
+
+    async internalCommission(c: Context) {
         try {
             const { employeeId, year } = c.req.query();
             const yearInt = parseInt(year as string);
 
-            const result = await CommissionHelper.processAnnualCommission(yearInt, async (startDate, endDate) => {
-                const rows = await snapshotService.getSnapshotBySales(employeeId, startDate, endDate);
+            const result = await this.commissionHelper.processAnnualCommission(yearInt, async (startDate, endDate) => {
+                const rows = await this.snapshotService.getSnapshotBySales(employeeId, startDate, endDate);
 
                 let soloCount = 0;
                 let soloTotal = 0;
@@ -62,21 +69,21 @@ export class CommissionController {
                 };
             });
             
-            return c.json(ApiResponseHandler.success("Count retrived successfuly", result));
+            return c.json(this.apiResponse.success("Count retrived successfuly", result));
             
         } catch (error: any) {
-            return c.json(ApiResponseHandler.error('Failed to retrieve commission chart data', error.message));
+            return c.json(this.apiResponse.error('Failed to retrieve commission chart data', error.message));
         }
     }
 
-    static async implementatorCommission(c: Context) {
+    async implementatorCommission(c: Context) {
         try {
             const { employeeId, year } = c.req.query();
             const yearInt = parseInt(year as string);
 
-            const result = await CommissionHelper.processAnnualCommission(yearInt, async (startDate, endDate) => {
-                const rows = await snapshotService.getSnapshotByImplementator(employeeId, startDate, endDate);
-                const churnCount = await IsService.getCustomerNaByImplementator(employeeId, startDate, endDate)
+            const result = await this.commissionHelper.processAnnualCommission(yearInt, async (startDate, endDate) => {
+                const rows = await this.snapshotService.getSnapshotByImplementator(employeeId, startDate, endDate);
+                const churnCount = await this.isService.getCustomerNaByImplementator(employeeId, startDate, endDate)
                 
                 let baseCommissionCount = 0;
                 let baseCommissionTotal = 0;
@@ -127,31 +134,31 @@ export class CommissionController {
                 };
             });
             
-            return c.json(ApiResponseHandler.success("Count retrived successfuly", result));
+            return c.json(this.apiResponse.success("Count retrived successfuly", result));
             
         } catch (error: any) {
-            return c.json(ApiResponseHandler.error('Failed to retrieve commission chart data', error.message));
+            return c.json(this.apiResponse.error('Failed to retrieve commission chart data', error.message));
         }
     }
 
-    static async managerCommission(c: Context) {
+    async managerCommission(c: Context) {
         try {
             const { employeeId, year } = c.req.query();
             const yearInt = parseInt(year as string);
 
-            const managerRows: any = await EmployeeService.getManagerById(employeeId);
+            const managerRows: any = await this.employeeService.getManagerById(employeeId);
             if (!managerRows || managerRows.length === 0) {
-                 return c.json(ApiResponseHandler.error('Manager not found', ''));
+                 return c.json(this.apiResponse.error('Manager not found', ''));
             }
             const manager = managerRows[0];
             
-            const staffRows = await EmployeeService.getStaff(manager.id) as any[];
+            const staffRows = await this.employeeService.getStaff(manager.id) as any[];
             const staffIds = staffRows.map((s: any) => s.employee_id);
 
-            const result = await CommissionHelper.processAnnualCommission(yearInt, async (startDate, endDate) => {
+            const result = await this.commissionHelper.processAnnualCommission(yearInt, async (startDate, endDate) => {
                 let rows: any[] = [];
                 if (staffIds.length > 0) {
-                    rows = await snapshotService.getSnapshotBySalesIds(staffIds, startDate, endDate);
+                    rows = await this.snapshotService.getSnapshotBySalesIds(staffIds, startDate, endDate);
                 }
 
                 const salesMap = new Map<string, { name: string, count: number, total: number }>();
@@ -195,10 +202,10 @@ export class CommissionController {
                 };
             });
             
-            return c.json(ApiResponseHandler.success("Count retrived successfuly", result));
+            return c.json(this.apiResponse.success("Count retrived successfuly", result));
             
         } catch (error: any) {
-            return c.json(ApiResponseHandler.error('Failed to retrieve commission chart data', error.message));
+            return c.json(this.apiResponse.error('Failed to retrieve commission chart data', error.message));
         }
     }
 }

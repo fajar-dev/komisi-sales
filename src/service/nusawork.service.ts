@@ -67,6 +67,7 @@ export class Nusawork {
             userId: emp.user_id,
             employeeId: emp.employee_id,
             name: emp.full_name,
+            email: emp.email,
             photoProfile: emp.photo_profile,
             jobPosition: emp.job_position,
             organizationName: emp.organization_name,

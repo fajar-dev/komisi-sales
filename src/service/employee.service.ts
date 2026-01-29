@@ -7,6 +7,7 @@ export class EmployeeService {
                 id,
                 employee_id,
                 name,
+                email,
                 photo_profile,
                 job_position,
                 organization_name,
@@ -14,7 +15,7 @@ export class EmployeeService {
                 branch,
                 manager_id
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON DUPLICATE KEY UPDATE
                 employee_id = VALUES(employee_id),
                 name = VALUES(name),
@@ -63,5 +64,14 @@ export class EmployeeService {
             WHERE manager_id = ?
         `, [managerId]);
         return rows;
+    }
+
+    static async getEmployeeByEmail(email: string) {
+        const [rows] = await pool.query(
+            `SELECT * FROM employee WHERE email = ? LIMIT 1`,
+            [email]
+        );
+
+        return Array.isArray(rows) && rows.length > 0 ? rows[0] : null;
     }
 }

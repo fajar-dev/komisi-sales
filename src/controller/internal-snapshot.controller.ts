@@ -1,14 +1,19 @@
 import { Context } from 'hono';
-import { snapshotService } from '../service/snapshot.service';
+import { SnapshotService } from '../service/snapshot.service';
 import { ApiResponseHandler } from '../helper/api-response';
-import { period } from '../helper/period';
 import { IsService } from '../service/is.service';
 
 export class InternalSnapshotController {
-    static async amNusaworkInvoice(c: Context) {
+    constructor(
+        private snapshotService = SnapshotService,
+        private isService = IsService,
+        private apiResponse = ApiResponseHandler,
+    ) {}
+
+    async amNusaworkInvoice(c: Context) {
         try {
             const { employeeId, startDate, endDate } = c.req.query();
-            const result = await snapshotService.getSnapshotBySales(employeeId, startDate, endDate);
+            const result = await this.snapshotService.getSnapshotBySales(employeeId, startDate, endDate);
             const snapshot: any[] = result.map((row: any) => ({
                 ai: row.ai,
                 invoiceNumber: row.invoice_number,
@@ -46,19 +51,19 @@ export class InternalSnapshotController {
                 total: soloTotal + boosterTotal + recurringTotal
             };
 
-            return c.json(ApiResponseHandler.success("Invoice retrived successfuly", categorized));
+            return c.json(this.apiResponse.success("Invoice retrived successfuly", categorized));
 
         } catch (error: any) {
-            return c.json(ApiResponseHandler.error('Failed to retrieve and categorize snapshot', error.message));
+            return c.json(this.apiResponse.error('Failed to retrieve and categorize snapshot', error.message));
         }
     }
 
-    static async implementatorInvoice(c: Context) {
+    async implementatorInvoice(c: Context) {
         try {
             const { employeeId, startDate, endDate } = c.req.query();
             
-            const result = await snapshotService.getSnapshotByImplementator(employeeId, startDate, endDate);
-            const churnCount = await IsService.getCustomerNaByImplementator(employeeId, startDate, endDate);
+            const result = await this.snapshotService.getSnapshotByImplementator(employeeId, startDate, endDate);
+            const churnCount = await this.isService.getCustomerNaByImplementator(employeeId, startDate, endDate);
 
             const snapshot: any[] = result.map((row: any) => ({
                 ai: row.ai,
@@ -122,10 +127,10 @@ export class InternalSnapshotController {
                 total: baseCommissionTotal + retentionBoosterTotal + recurringTotal
             };
 
-            return c.json(ApiResponseHandler.success("Snapshot retrieved successfully", categorized));
+            return c.json(this.apiResponse.success("Snapshot retrieved successfully", categorized));
 
         } catch (error: any) {
-            return c.json(ApiResponseHandler.error('Failed to retrieve and categorize snapshot', error.message));
+            return c.json(this.apiResponse.error('Failed to retrieve and categorize snapshot', error.message));
         }
     }
 }

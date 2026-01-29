@@ -2,10 +2,15 @@ import { Nusawork } from '../service/nusawork.service';
 import { EmployeeService } from '../service/employee.service';
 
 export class EmployeeCrawl {
-    public static async crawlEmployee() {
-        const sales = await Nusawork.getSalesDigital()
+    constructor(
+        private nusaworkService = Nusawork,
+        private employeeService = EmployeeService
+    ) {}
+
+    async crawlEmployee() {
+        const sales = await this.nusaworkService.getSalesDigital()
         for (const data of sales) {
-            await EmployeeService.insertEmployee(data);
+            await this.employeeService.insertEmployee(data);
             console.log("Employee inserted: ", data.employeeId);
         }
     }
