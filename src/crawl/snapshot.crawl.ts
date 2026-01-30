@@ -11,7 +11,7 @@ export class SnapshotCrawl {
 
     async crawlInternalInvoice() {
         const { startDate, endDate } = this.periodHelper.getStartAndEndDateForCurrentMonth();
-        const rows = await this.isService.getInvoiceNusaworkByDateRange(startDate, endDate);
+        const rows = await this.isService.getIinternalByDateRange(startDate, endDate);
 
         const commissionData = rows.map((row: any) => {
             let isNew = false;
@@ -87,6 +87,7 @@ export class SnapshotCrawl {
                 implementatorId: row.Surveyor,
                 referralId: referral,
                 crossSellCount: row.cross_sell_count,
+                type: row.BusinessOperation
             };
         });
 

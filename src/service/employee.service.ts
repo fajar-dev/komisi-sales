@@ -93,7 +93,7 @@ export class EmployeeService {
                 FROM employee e
                 INNER JOIN employee_hierarchy eh ON e.manager_id = eh.id
             )
-            SELECT * FROM employee_hierarchy ORDER BY depth ASC;
+            SELECT * FROM employee_hierarchy WHERE has_dashboard = true ORDER BY depth ASC ;
         `, [employeeId]);
 
         return Array.isArray(rows) ? rows : [];

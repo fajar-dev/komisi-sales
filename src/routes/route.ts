@@ -15,14 +15,17 @@ route.post('/auth/logout', (c) => authController.logout(c));
 
 
 import { hierarchyMiddleware } from '../middleware/hierarchy.middleware';
+import { SnapshotController } from '../controller/snapshot.controller';
 
-route.get('internal/:id/commission', authMiddleware, hierarchyMiddleware, (c) => new CommissionController().internalCommission(c));
-route.get('implementator/:id/commission', authMiddleware, hierarchyMiddleware, (c) => new CommissionController().implementatorCommission(c));
-route.get('manager/:id/commission', authMiddleware, hierarchyMiddleware, (c) => new CommissionController().managerCommission(c));
+route.get('/sales/:id/commission', authMiddleware, hierarchyMiddleware, (c) => new CommissionController().salesCommission(c));
+route.get('/implementator/:id/commission', authMiddleware, hierarchyMiddleware, (c) => new CommissionController().implementatorCommission(c));
+route.get('/manager/:id/commission', authMiddleware, hierarchyMiddleware, (c) => new CommissionController().managerCommission(c));
 
+route.get('/sales/:id/invoice', (c) => new SnapshotController().internalInvoice(c));
+route.get('/implementator/:id/invoice', (c) => new SnapshotController().implementatorInvoice(c));
 
-route.get('employee/:id', authMiddleware, (c) => new EmployeeController().getEmployeeByEmployeeId(c));
-route.get('employee/:id/hierarchy', (c) => new EmployeeController().getEmployeeHierarchy(c));
+route.get('/employee/:id', authMiddleware, (c) => new EmployeeController().getEmployeeByEmployeeId(c));
+route.get('/employee/:id/hierarchy', authMiddleware, (c) => new EmployeeController().getEmployeeHierarchy(c));
 
 
 export default route;

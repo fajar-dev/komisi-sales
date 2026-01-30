@@ -4,7 +4,7 @@ export class SnapshotService {
     static async insertSnapshot(data: any) {
         const [rows] = await pool.query(
             `
-            INSERT INTO internal_snapshot (
+            INSERT INTO snapshot (
             ai,
             invoice_number,
             invoice_date,
@@ -25,9 +25,10 @@ export class SnapshotService {
             sales_commission,
             sales_commission_percentage,
             referral_id,
+            type,
             cross_sell_count
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON DUPLICATE KEY UPDATE
             invoice_number = VALUES(invoice_number),
             invoice_date = VALUES(invoice_date),
@@ -48,6 +49,7 @@ export class SnapshotService {
             sales_commission = VALUES(sales_commission),
             sales_commission_percentage = VALUES(sales_commission_percentage),
             referral_id = VALUES(referral_id),
+            type = VALUES(type),
             cross_sell_count = VALUES(cross_sell_count)
             `,
             [
@@ -71,6 +73,7 @@ export class SnapshotService {
             data.salesCommission,
             data.salesCommissionPercentage,
             data.referralId,
+            data.type,
             data.crossSellCount,
             ]
         );
@@ -82,7 +85,7 @@ export class SnapshotService {
     static async getSnapshotBySales(salesId: string, startDate: string, endDate: string) {
         const [rows] = await pool.query(`
             SELECT *
-            FROM internal_snapshot
+            FROM snapshot
             WHERE sales_id = ?
             AND invoice_date BETWEEN ? AND ?
         `, [salesId, startDate, endDate]);
@@ -92,7 +95,7 @@ export class SnapshotService {
     static async getSnapshotByImplementator(salesId: string, startDate: string, endDate: string) {
         const [rows] = await pool.query(`
             SELECT *
-            FROM internal_snapshot
+            FROM snapshot
             WHERE implementator_id = ?
             AND invoice_date BETWEEN ? AND ?
         `, [salesId, startDate, endDate]);
@@ -102,8 +105,8 @@ export class SnapshotService {
     static async getSnapshotByManagerSalesId(managerSalesId: string, startDate: string, endDate: string) {
         const [rows] = await pool.query(`
             SELECT *
-            FROM internal_snapshot
-            JOIN employee ON internal_snapshot.sales_id = employee.employee_id
+            FROM snapshot
+            JOIN employee ON snapshot.sales_id = employee.employee_id
             WHERE manager_sales_id = ?
             AND invoice_date BETWEEN ? AND ?
         `, [managerSalesId, startDate, endDate]);
@@ -117,11 +120,11 @@ export class SnapshotService {
         const placeholders = salesIds.map(() => '?').join(',');
         
         const [rows] = await pool.query(`
-            SELECT internal_snapshot.*, employee.name 
-            FROM internal_snapshot
-            LEFT JOIN employee ON internal_snapshot.sales_id = employee.employee_id
-            WHERE internal_snapshot.sales_id IN (${placeholders})
-            AND internal_snapshot.invoice_date BETWEEN ? AND ?
+            SELECT snapshot.*, employee.name 
+            FROM snapshot
+            LEFT JOIN employee ON snapshot.sales_id = employee.employee_id
+            WHERE snapshot.sales_id IN (${placeholders})
+            AND snapshot.invoice_date BETWEEN ? AND ?
         `, [...salesIds, startDate, endDate]);
         
         return rows as any[];

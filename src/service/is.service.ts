@@ -2,7 +2,7 @@ import { nisPool } from "../config/nis.db"
 
 export class IsService {
 
-    static async getInvoiceNusaworkByDateRange(startDate: string, endDate: string) {
+    static async getIinternalByDateRange(startDate: string, endDate: string) {
         let query = `
             SELECT 
                 nciit.AI, nciit.counter, nciit.new_subscription, nciit.dpp, nciit.is_prorata, nciit.is_upgrade,
@@ -10,7 +10,7 @@ export class IsService {
                 IFNULL(citc.InvoiceDate, cit.InvoiceDate) as InvoiceDate, 
                 cs.CustServId, cs.SalesId, cs.ManagerSalesId,
                 c.CustId, c.CustCompany, 
-                s.ServiceId, s.ServiceType, s.ServiceLevel,
+                s.ServiceId, s.ServiceType, s.ServiceLevel, s.BusinessOperation,
                 c.Surveyor,
                 nci.Description,
                 IFNULL(cs.ResellerType, c.ResellerType)   AS ResellerType,
@@ -21,7 +21,7 @@ export class IsService {
                     JOIN Services s2 ON cs2.ServiceId = s2.ServiceId
                     WHERE cs2.CustId = nci.CustId
                     AND (cs2.CustStatus IS NULL OR cs2.CustStatus <> 'NA')
-                    AND s2.ServiceLevel IN ('GS', 'ZHP', 'M3', 'GCP', 'WL', 'FD', 'SLBP')
+                    AND s2.BusinessOperation = 'resell'
                 ) as cross_sell_count
             FROM NewCustomerInvoiceInternetCounter nciit 
             LEFT JOIN NewCustomerInvoice nci ON nciit.AI = nci.AI 
@@ -30,7 +30,7 @@ export class IsService {
             LEFT JOIN CustomerServices cs ON cs.CustId = nci.CustId AND cs.ServiceId = cit.ServiceId
             LEFT JOIN Customer c ON c.CustId = nci.CustId
             LEFT JOIN Services s ON cs.ServiceId = s.ServiceId
-            WHERE s.ServiceGroup IN ('NW', 'CL', 'WH', 'SV') 
+            WHERE s.BusinessOperation = 'internal'
             AND IFNULL(citc.InvoiceDate, cit.InvoiceDate) BETWEEN ? AND ?
             AND nciit.trx_date IS NOT NULL
             GROUP BY nciit.AI

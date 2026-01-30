@@ -61,6 +61,8 @@ export class Nusawork {
             emp.organization_name === 'Sales Nusawork' 
             || emp.organization_name === 'Sales GWS' 
             || emp.organization_name === 'Nusawork'
+            || emp.job_position === 'VP Sales Digital Business' 
+            || (emp.organization_name === 'Sales' && emp.job_position === 'Account Manager' && emp.id_report_to_value == 13)
         )
 
         return accountManager.map((emp: any) => ({
