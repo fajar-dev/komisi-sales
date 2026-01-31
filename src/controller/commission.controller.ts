@@ -22,165 +22,174 @@ export class CommissionController {
 
             const round2 = (n: number) => Math.round(n * 100) / 100;
             const toNum = (v: any) => {
-            const n = typeof v === "string" ? parseFloat(v) : Number(v);
-            return Number.isFinite(n) ? n : 0;
+                const n = typeof v === "string" ? parseFloat(v) : Number(v);
+                return Number.isFinite(n) ? n : 0;
             };
 
             // Periode/bulanan -> wajib return { total, detail }
             const annual = await this.commissionHelper.processAnnualCommission(
-            yearInt,
-            async (startDate, endDate) => {
-                const rows = await this.snapshotService.getSnapshotBySales(
-                employeeId,
-                startDate,
-                endDate
-                );
+                yearInt,
+                async (startDate, endDate) => {
+                    const rows = await this.snapshotService.getSnapshotBySales(
+                        employeeId,
+                        startDate,
+                        endDate
+                    );
 
-                // ===== INTERNAL =====
-                let soloCount = 0;
-                let soloTotal = 0;
+                    // ===== INTERNAL =====
+                    let soloCount = 0;
+                    let soloTotal = 0;
 
-                let boosterCount = 0;
-                let boosterTotal = 0;
+                    let boosterCount = 0;
+                    let boosterTotal = 0;
 
-                let recurringCount = 0;
-                let recurringTotal = 0;
+                    let recurringCount = 0;
+                    let recurringTotal = 0;
 
-                // ===== RESELL =====
-                let resellMargin15Count = 0; // 5%
-                let resellMargin15Total = 0;
+                    // ===== RESELL =====
+                    let resellMargin15Count = 0; // 5%
+                    let resellMargin15Total = 0;
 
-                let resellMargin10to15Count = 0; // 4%
-                let resellMargin10to15Total = 0;
+                    let resellMargin10to15Count = 0; // 4%
+                    let resellMargin10to15Total = 0;
 
-                let resellMarginBelow10Count = 0; // 2.5%
-                let resellMarginBelow10Total = 0;
+                    let resellMarginBelow10Count = 0; // 2.5%
+                    let resellMarginBelow10Total = 0;
 
-                let resellRecurringCount = 0; // 0.5%
-                let resellRecurringTotal = 0;
+                    let resellRecurringCount = 0; // 0.5%
+                    let resellRecurringTotal = 0;
 
-                rows.forEach((row: any) => {
-                const commissionAmount = toNum(row.sales_commission);
-                const commissionPercentage = toNum(row.sales_commission_percentage);
+                    rows.forEach((row: any) => {
+                        const commissionAmount = toNum(row.sales_commission);
+                        const commissionPercentage = toNum(row.sales_commission_percentage);
 
-                // INTERNAL
-                if (commissionPercentage === 12) {
-                    soloCount++;
-                    soloTotal += commissionAmount;
-                    return;
+                        // INTERNAL
+                        if (commissionPercentage === 12) {
+                            soloCount++;
+                            soloTotal += commissionAmount;
+                            return;
+                        }
+                        if (commissionPercentage === 15) {
+                            boosterCount++;
+                            boosterTotal += commissionAmount;
+                            return;
+                        }
+                        if (commissionPercentage === 1) {
+                            recurringCount++;
+                            recurringTotal += commissionAmount;
+                            return;
+                        }
+
+                        // RESELL (ambil dari % di DB)
+                        if (commissionPercentage === 5) {
+                            resellMargin15Count++;
+                            resellMargin15Total += commissionAmount;
+                            return;
+                        }
+                        if (commissionPercentage === 4) {
+                            resellMargin10to15Count++;
+                            resellMargin10to15Total += commissionAmount;
+                            return;
+                        }
+                        if (commissionPercentage === 2.5) {
+                            resellMarginBelow10Count++;
+                            resellMarginBelow10Total += commissionAmount;
+                            return;
+                        }
+                        if (commissionPercentage === 0.5) {
+                            resellRecurringCount++;
+                            resellRecurringTotal += commissionAmount;
+                            return;
+                        }
+                    });
+
+                    const totalInternal = soloTotal + boosterTotal + recurringTotal;
+                    const totalResell =
+                        resellMargin15Total +
+                        resellMargin10to15Total +
+                        resellMarginBelow10Total +
+                        resellRecurringTotal;
+
+                    const periodTotal = totalInternal + totalResell;
+
+                    // detail untuk 1 periode (helper akan kumpulkan jadi annual.data)
+                    const detail = [
+                        {
+                            startDate,
+                            endDate,
+                            total: round2(periodTotal),
+                            totalInternal: round2(totalInternal),
+                            totalResell: round2(totalResell),
+                            internal: [
+                                { name: "Solo", count: soloCount, total: round2(soloTotal) },
+                                { name: "Booster", count: boosterCount, total: round2(boosterTotal) },
+                                { name: "Recurring", count: recurringCount, total: round2(recurringTotal) },
+                            ],
+                            resell: [
+                                {
+                                    name: "Margin >= 15% (5%)",
+                                    count: resellMargin15Count,
+                                    total: round2(resellMargin15Total),
+                                },
+                                {
+                                    name: "Margin >= 10% < 15% (4%)",
+                                    count: resellMargin10to15Count,
+                                    total: round2(resellMargin10to15Total),
+                                },
+                                {
+                                    name: "Margin < 10% (2.5%)",
+                                    count: resellMarginBelow10Count,
+                                    total: round2(resellMarginBelow10Total),
+                                },
+                                {
+                                    name: "Recurring (0.5%)",
+                                    count: resellRecurringCount,
+                                    total: round2(resellRecurringTotal),
+                                },
+                            ],
+                        },
+                    ];
+
+                    return {
+                        total: round2(periodTotal),
+                        detail,
+                    };
                 }
-                if (commissionPercentage === 15) {
-                    boosterCount++;
-                    boosterTotal += commissionAmount;
-                    return;
-                }
-                if (commissionPercentage === 1) {
-                    recurringCount++;
-                    recurringTotal += commissionAmount;
-                    return;
-                }
-
-                // RESELL (ambil dari % di DB)
-                if (commissionPercentage === 5) {
-                    resellMargin15Count++;
-                    resellMargin15Total += commissionAmount;
-                    return;
-                }
-                if (commissionPercentage === 4) {
-                    resellMargin10to15Count++;
-                    resellMargin10to15Total += commissionAmount;
-                    return;
-                }
-                if (commissionPercentage === 2.5) {
-                    resellMarginBelow10Count++;
-                    resellMarginBelow10Total += commissionAmount;
-                    return;
-                }
-                if (commissionPercentage === 0.5) {
-                    resellRecurringCount++;
-                    resellRecurringTotal += commissionAmount;
-                    return;
-                }
-                });
-
-                const totalInternal = soloTotal + boosterTotal + recurringTotal;
-                const totalResell =
-                resellMargin15Total +
-                resellMargin10to15Total +
-                resellMarginBelow10Total +
-                resellRecurringTotal;
-
-                const periodTotal = totalInternal + totalResell;
-
-                // detail untuk 1 periode (helper akan kumpulkan jadi annual.data)
-                const detail = [
-                {
-                    startDate,
-                    endDate,
-                    total: round2(periodTotal),
-                    totalInternal: round2(totalInternal),
-                    totalResell: round2(totalResell),
-                    internal: [
-                    { name: "Solo", count: soloCount, total: round2(soloTotal) },
-                    { name: "Booster", count: boosterCount, total: round2(boosterTotal) },
-                    { name: "Recurring", count: recurringCount, total: round2(recurringTotal) },
-                    ],
-                    resell: [
-                    {
-                        name: "Margin >= 15% (5%)",
-                        count: resellMargin15Count,
-                        total: round2(resellMargin15Total),
-                    },
-                    {
-                        name: "Margin >= 10% < 15% (4%)",
-                        count: resellMargin10to15Count,
-                        total: round2(resellMargin10to15Total),
-                    },
-                    {
-                        name: "Margin < 10% (2.5%)",
-                        count: resellMarginBelow10Count,
-                        total: round2(resellMarginBelow10Total),
-                    },
-                    {
-                        name: "Recurring (0.5%)",
-                        count: resellRecurringCount,
-                        total: round2(resellRecurringTotal),
-                    },
-                    ],
-                },
-                ];
-
-                return {
-                total: round2(periodTotal),
-                detail,
-                };
-            }
             );
 
             // annual: { total: number; data: any[] }
             const yearlyData = Array.isArray(annual?.data) ? annual.data : [];
 
-            const yearlyInternal = yearlyData.reduce(
-            (acc: number, d: any) => acc + toNum(d.totalInternal),
-            0
-            );
-            const yearlyResell = yearlyData.reduce(
-            (acc: number, d: any) => acc + toNum(d.totalResell),
-            0
-            );
+            //  Akses totalInternal & totalResell dari detail[0]
+            const yearlyInternal = yearlyData.reduce((acc: number, d: any) => {
+                const monthInternal = (d.detail || []).reduce(
+                    (sum: number, dt: any) => sum + toNum(dt.totalInternal),
+                    0
+                );
+                return acc + monthInternal;
+            }, 0);
+
+            const yearlyResell = yearlyData.reduce((acc: number, d: any) => {
+                const monthResell = (d.detail || []).reduce(
+                    (sum: number, dt: any) => sum + toNum(dt.totalResell),
+                    0
+                );
+                return acc + monthResell;
+            }, 0);
+
             const yearlyTotal = yearlyInternal + yearlyResell;
 
             const finalResult = {
-            total: round2(yearlyTotal),
-            totalInternal: round2(yearlyInternal),
-            totalResell: round2(yearlyResell),
-            data: yearlyData, // keep original naming from helper
+                total: round2(yearlyTotal),
+                totalInternal: round2(yearlyInternal),
+                totalResell: round2(yearlyResell),
+                data: yearlyData,
             };
 
             return c.json(this.apiResponse.success("Count retrived successfuly", finalResult));
         } catch (error: any) {
             return c.json(
-            this.apiResponse.error("Failed to retrieve commission chart data", error.message)
+                this.apiResponse.error("Failed to retrieve commission chart data", error.message)
             );
         }
     }
@@ -260,7 +269,7 @@ export class CommissionController {
 
             const managerRows: any = await this.employeeService.getManagerById(employeeId);
             if (!managerRows || managerRows.length === 0) {
-                 return c.json(this.apiResponse.error('Manager not found', ''));
+                return c.json(this.apiResponse.error('Manager not found', ''));
             }
             const manager = managerRows[0];
             
@@ -285,11 +294,11 @@ export class CommissionController {
                     const commissionAmount = parseFloat(row.sales_commission || 0);
 
                     if (salesMap.has(salesName)) {
-                         const salesData = salesMap.get(salesName)!;
-                         salesData.count++;
-                         salesData.total += commissionAmount;
+                        const salesData = salesMap.get(salesName)!;
+                        salesData.count++;
+                        salesData.total += commissionAmount;
                     } else {
-                         salesMap.set(salesName, { name: salesName, count: 1, total: commissionAmount });
+                        salesMap.set(salesName, { name: salesName, count: 1, total: commissionAmount });
                     }
                 });
 

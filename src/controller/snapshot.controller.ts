@@ -2,17 +2,21 @@ import { Context } from 'hono';
 import { SnapshotService } from '../service/snapshot.service';
 import { ApiResponseHandler } from '../helper/api-response';
 import { IsService } from '../service/is.service';
+import { EmployeeService } from '../service/employee.service';
+import { period } from '../helper/period';
 
 export class SnapshotController {
     constructor(
         private snapshotService = SnapshotService,
         private isService = IsService,
+        private employeeService = EmployeeService,
         private apiResponse = ApiResponseHandler,
     ) {}
 
-    async internalInvoice(c: Context) {
+    async salesInvoice(c: Context) {
         try {
-            const { employeeId, startDate, endDate } = c.req.query();
+            const { startDate, endDate } = c.req.query();
+            const employeeId = c.req.param('id');
             const result = await this.snapshotService.getSnapshotBySales(employeeId, startDate, endDate);
 
             const data: any[] = result.map((row: any) => ({
@@ -39,17 +43,9 @@ export class SnapshotController {
 
             const total = data.reduce((sum, inv) => sum + Number(inv.salesCommission || 0), 0);
 
-            // kalau masih butuh breakdown total tanpa memecah data:
-            const totalsByPercentage = data.reduce((acc, inv) => {
-            const key = String(inv.salesCommissionPercentage ?? "unknown");
-            acc[key] = (acc[key] || 0) + Number(inv.salesCommission || 0);
-            return acc;
-            }, {} as Record<string, number>);
-
             return c.json(
             this.apiResponse.success("Invoice retrived successfuly", {
                 data,
-                totalsByPercentage,
                 total,
             })
             );
@@ -61,7 +57,8 @@ export class SnapshotController {
 
     async implementatorInvoice(c: Context) {
         try {
-            const { employeeId, startDate, endDate } = c.req.query();
+            const { startDate, endDate } = c.req.query();
+            const employeeId = c.req.param('id');
 
             const result = await this.snapshotService.getSnapshotByImplementator(employeeId, startDate, endDate);
             const churnCount = await this.isService.getCustomerNaByImplementator(employeeId, startDate, endDate);
@@ -110,18 +107,10 @@ export class SnapshotController {
 
             const total = data.reduce((sum, inv) => sum + Number(inv.implementatorCommission || 0), 0);
 
-            // optional: breakdown total tanpa memecah data
-            const totalsByPercentage = data.reduce((acc, inv) => {
-            const key = String(inv.implementatorCommissionPercentage ?? "unknown");
-            acc[key] = (acc[key] || 0) + Number(inv.implementatorCommission || 0);
-            return acc;
-            }, {} as Record<string, number>);
-
             return c.json(
             this.apiResponse.success("Snapshot retrieved successfully", {
                 churnCount,
                 data,
-                totalsByPercentage,
                 total,
             })
             );
@@ -130,4 +119,58 @@ export class SnapshotController {
         }
     }
 
+    async managerTeamCommission(c: Context) {
+        try {
+            const employeeId = c.req.param('id');
+            const { year } = c.req.query();
+            const yearInt = parseInt(year as string);
+
+            if (isNaN(yearInt)) {
+                 return c.json(this.apiResponse.error("Invalid year", "Year must be a number"));
+            }
+
+            const startPeriod = period.getStartAndEndDateForMonth(yearInt, 0);
+            const endPeriod = period.getStartAndEndDateForMonth(yearInt, 11);
+
+            const startDate = startPeriod.startDate;
+            const endDate = endPeriod.endDate;
+
+            const hierarchy = await this.employeeService.getHierarchy(employeeId);
+            
+            // Exclude the manager themselves
+            const subordinates = hierarchy.filter((e: any) => e.employee_id !== employeeId);
+            
+            if (!subordinates || subordinates.length === 0) {
+                 return c.json(this.apiResponse.success("No employees found", []));
+            }
+
+            const employeeIds = subordinates.map((e: any) => e.employee_id);
+            const snapshots = await this.snapshotService.getSnapshotBySalesIds(employeeIds, startDate, endDate);
+
+            // Group snapshots by sales_id and sum commission
+            const commissionMap = new Map<string, number>();
+            snapshots.forEach((row: any) => {
+                const salesId = row.sales_id;
+                const commission = parseFloat(row.sales_commission) || 0;
+                const current = commissionMap.get(salesId) || 0;
+                commissionMap.set(salesId, current + commission);
+            });
+
+            // Map results back to hierarchy
+            const data = subordinates.map((emp: any) => ({
+                ...emp,
+                totalCommission: commissionMap.get(emp.employee_id) || 0
+            }));
+
+            const total = data.reduce((sum: number, emp: any) => sum + emp.totalCommission, 0);
+
+            return c.json(this.apiResponse.success("Employee commission hierarchy retrieved successfully", {
+                data,
+                total
+            }));
+
+        } catch (error: any) {
+            return c.json(this.apiResponse.error("Failed to retrieve hierarchy commission", error.message));
+        }
+    }
 }

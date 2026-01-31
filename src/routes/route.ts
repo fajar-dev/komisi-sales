@@ -21,8 +21,9 @@ route.get('/sales/:id/commission', authMiddleware, hierarchyMiddleware, (c) => n
 route.get('/implementator/:id/commission', authMiddleware, hierarchyMiddleware, (c) => new CommissionController().implementatorCommission(c));
 route.get('/manager/:id/commission', authMiddleware, hierarchyMiddleware, (c) => new CommissionController().managerCommission(c));
 
-route.get('/sales/:id/invoice', (c) => new SnapshotController().internalInvoice(c));
+route.get('/sales/:id/invoice', (c) => new SnapshotController().salesInvoice(c));
 route.get('/implementator/:id/invoice', (c) => new SnapshotController().implementatorInvoice(c));
+route.get('/manager/:id/team', (c) => new SnapshotController().managerTeamCommission(c));
 
 route.get('/employee/:id', authMiddleware, (c) => new EmployeeController().getEmployeeByEmployeeId(c));
 route.get('/employee/:id/hierarchy', authMiddleware, (c) => new EmployeeController().getEmployeeHierarchy(c));
