@@ -1,7 +1,10 @@
 {
   "name": "komisi-sales",
   "scripts": {
-    "dev": "bun run --hot src/main.ts"
+    "dev": "bun run --hot src/main.ts",
+    "start": "bun run src/main.ts",
+    "crawl": "bun run src/crawl/crawl.ts",
+    "build": "bun build --minify --outfile dist/index.js --target bun src/index.ts"
   },
   "dependencies": {
     "axios": "^1.13.2",
