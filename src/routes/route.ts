@@ -16,6 +16,9 @@ route.post('/auth/logout', (c) => authController.logout(c));
 
 import { hierarchyMiddleware } from '../middleware/hierarchy.middleware';
 import { SnapshotController } from '../controller/snapshot.controller';
+import { AdditionalController } from '../controller/additional.controller';
+
+route.get('/additional', (c) => new AdditionalController().getPeriod(c));
 
 route.get('/sales/:id/commission', authMiddleware, hierarchyMiddleware, (c) => new CommissionController().salesCommission(c));
 route.get('/implementator/:id/commission', authMiddleware, hierarchyMiddleware, (c) => new CommissionController().implementatorCommission(c));
