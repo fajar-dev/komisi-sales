@@ -8,6 +8,7 @@ import { EmployeeController } from '../controller/employee.controller';
 const route = new Hono();
 
 const authController = new AuthController();
+route.post('/auth/google', (c) => authController.google(c));
 route.post('/auth/login', (c) => authController.login(c));
 route.post('/auth/refresh', (c) => authController.refresh(c));
 route.get('/auth/me', (c) => authController.me(c));

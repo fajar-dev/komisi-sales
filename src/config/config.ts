@@ -23,4 +23,4 @@ export const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET
 
 export const JWT_SECRET = process.env.JWT_SECRET
 
-
+export const AUTH_API_URL = process.env.AUTH_API_URL

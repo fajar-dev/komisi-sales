@@ -2,13 +2,15 @@ import { OAuth2Client } from "google-auth-library";
 import { Context } from "hono";
 import { sign, verify } from 'hono/jwt';
 import { EmployeeService } from "../service/employee.service";
-import { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, JWT_SECRET } from "../config/config";
+import { AUTH_API_URL, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, JWT_SECRET } from "../config/config";
 import { ApiResponseHandler } from "../helper/api-response";
+import axios from "axios";
 
 export class AuthController {
     private clientId = GOOGLE_CLIENT_ID;
     private clientSecret = GOOGLE_CLIENT_SECRET;
     private jwtSecret = JWT_SECRET;
+    private authApiUrl = AUTH_API_URL;
 
     constructor(
         private employeeService = EmployeeService,
@@ -35,35 +37,72 @@ export class AuthController {
         return payload;
     }
 
+    async generateToken(employee: any) {
+        const now = Math.floor(Date.now() / 1000);
+        const accessTokenPayload = {
+            sub: employee.employee_id,
+            email: employee.email,
+            role: employee.job_position,
+            exp: now + 60 * 15, // 15 minutes
+        };
+        const refreshTokenPayload = {
+            sub: employee.employee_id,
+            email: employee.email,
+            exp: now + 60 * 60 * 24 * 7, // 7 days
+        };
+
+        const accessToken = await sign(accessTokenPayload, this.jwtSecret!);
+        const refreshToken = await sign(refreshTokenPayload, this.jwtSecret!);
+        
+        return { accessToken, refreshToken };
+    }
+
     async login(c: Context) {
+        try {
+            const body = await c.req.json();
+            const isVerify = await axios.post(`${this.authApiUrl}`, {
+                username: body.employeeId,
+                password: body.password
+            });
+
+            if(isVerify.status !== 201){
+                return c.json(this.apiResponse.error('Employee ID or password is not valid'), 401);
+            }
+            const employee = await this.employeeService.getEmployeeByEmployeeId(body.employeeId) as any;
+            
+            if(!employee){
+                return c.json(this.apiResponse.error('Employee not found'), 404);
+            }
+
+            const tokens = await this.generateToken(employee);
+            
+            return c.json(this.apiResponse.success("Login successful", {
+                accessToken: tokens.accessToken,
+                refreshToken: tokens.refreshToken,
+                user: employee
+            }));
+
+        } catch (error: any) {
+            const status = error.response?.status || 500;
+            return c.json(this.apiResponse.error('Login failed', error.message), status as any);
+        }
+    }
+
+    async google(c: Context) {
         try {
             const body = await c.req.json();
             const payload = await this.verify(body.code);
             const employee = await this.employeeService.getEmployeeByEmail(payload.email) as any;
             
             if(!employee){
-                return c.json(this.apiResponse.custom(false, 'Employee not found'), 404);
+                return c.json(this.apiResponse.error('Employee not found'), 404);
             }
 
-            const now = Math.floor(Date.now() / 1000);
-            const accessTokenPayload = {
-                sub: employee.employee_id,
-                email: employee.email,
-                role: employee.job_position,
-                exp: now + 60 * 15, // 15 minutes
-            };
-            const refreshTokenPayload = {
-                sub: employee.employee_id,
-                email: employee.email,
-                exp: now + 60 * 60 * 24 * 7, // 7 days
-            };
-
-            const accessToken = await sign(accessTokenPayload, this.jwtSecret!);
-            const refreshToken = await sign(refreshTokenPayload, this.jwtSecret!);
+            const tokens = await this.generateToken(employee);
             
             return c.json(this.apiResponse.success("Login successful", {
-                accessToken,
-                refreshToken,
+                accessToken: tokens.accessToken,
+                refreshToken: tokens.refreshToken,
                 user: employee
             }));
 
@@ -90,23 +129,9 @@ export class AuthController {
                     return c.json(this.apiResponse.error('User not found'), 401);
                 }
 
-                const now = Math.floor(Date.now() / 1000);
-                const newAccessTokenPayload = {
-                    sub: employee.employee_id,
-                    email: employee.email,
-                    role: employee.job_position,
-                    exp: now + 60 * 15, // 15 minutes
-                };
-                const newRefreshTokenPayload = {
-                    sub: employee.employee_id,
-                    email: employee.email,
-                    exp: now + 60 * 60 * 24 * 7, // 7 days
-                };
+                const tokens = await this.generateToken(employee);
 
-                const accessToken = await sign(newAccessTokenPayload, this.jwtSecret!);
-                const newRefreshToken = await sign(newRefreshTokenPayload, this.jwtSecret!);
-
-                return c.json(this.apiResponse.success("Token refreshed", { accessToken, refreshToken: newRefreshToken }));
+                return c.json(this.apiResponse.success("Token refreshed", { accessToken: tokens.accessToken, refreshToken: tokens.refreshToken }));
 
             } catch (err) {
                 return c.json(this.apiResponse.error('Invalid refresh token'), 401);
