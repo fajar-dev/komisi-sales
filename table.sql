@@ -2,8 +2,10 @@ CREATE TABLE snapshot (
     ai INT PRIMARY KEY,
     invoice_number BIGINT NULL,
     invoice_date TIMESTAMP NULL,
+    paid_date TIMESTAMP NULL,
     month_period INT NULL,
     dpp DECIMAL(15, 2) NULL,
+    modal DECIMAL(15, 2) DEFAULT 0,
     description TEXT NULL,
     customer_service_id INT NULL,
     customer_id VARCHAR(20) NULL,
@@ -22,6 +24,7 @@ CREATE TABLE snapshot (
     referral_id VARCHAR(20) NULL,
     type ENUM('internal', 'resell') NOT NULL,
     cross_sell_count INT NOT NULL DEFAULT 0
+    is_adjustment BOOLEAN NOT NULL DEFAULT false
 );
 
 CREATE TABLE employee (

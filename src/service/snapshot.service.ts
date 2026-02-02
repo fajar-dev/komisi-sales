@@ -8,8 +8,10 @@ export class SnapshotService {
             ai,
             invoice_number,
             invoice_date,
+            paid_date,
             month_period,
             dpp,
+            modal,
             description,
             customer_service_id,
             customer_id,
@@ -29,12 +31,16 @@ export class SnapshotService {
             type,
             cross_sell_count
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (
+            ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+            )
             ON DUPLICATE KEY UPDATE
             invoice_number = VALUES(invoice_number),
             invoice_date = VALUES(invoice_date),
+            paid_date = VALUES(paid_date),
             month_period = VALUES(month_period),
             dpp = VALUES(dpp),
+            modal = VALUES(modal),
             description = VALUES(description),
             customer_service_id = VALUES(customer_service_id),
             customer_id = VALUES(customer_id),
@@ -55,42 +61,43 @@ export class SnapshotService {
             cross_sell_count = VALUES(cross_sell_count)
             `,
             [
-            data.ai,
-            data.invoiceNumber,
-            data.invoiceDate,
-            data.monthPeriod,
-            data.dpp,
-            data.description,
-            data.customerServiceId,
-            data.customerId,
-            data.customerCompany,
-            data.serviceGroupId,
-            data.serviceId,
-            data.serviceName,
-            data.salesId,
-            data.managerSalesId,
-            data.isNew,
-            data.isUpgrade,
-            data.isTermin,
-            data.implementatorId,
-            data.salesCommission,
-            data.salesCommissionPercentage,
-            data.referralId,
-            data.type,
-            data.crossSellCount,
+            data.ai,                         
+            data.invoiceNumber,              
+            data.invoiceDate,                
+            data.paidDate ?? null,            
+            data.monthPeriod,                
+            data.dpp,                        
+            data.modal ?? 0,                 
+            data.description,                
+            data.customerServiceId,          
+            data.customerId,                 
+            data.customerCompany,            
+            data.serviceGroupId,             
+            data.serviceId,                  
+            data.serviceName,                
+            data.salesId,                    
+            data.managerSalesId,             
+            data.isNew ?? false,             
+            data.isUpgrade ?? false,          
+            data.isTermin ?? false,           
+            data.implementatorId ?? null,     
+            data.salesCommission ?? 0,        
+            data.salesCommissionPercentage ?? 0, 
+            data.referralId ?? null,          
+            data.type,                       
+            data.crossSellCount ?? 0          
             ]
         );
 
         return rows;
     }
 
-
     static async getSnapshotBySales(salesId: string, startDate: string, endDate: string) {
         const [rows] = await pool.query(`
             SELECT *
             FROM snapshot
             WHERE sales_id = ?
-            AND invoice_date BETWEEN ? AND ?
+            AND paid_date BETWEEN ? AND ?
         `, [salesId, startDate, endDate]);
         return rows as any[];
     }
@@ -100,7 +107,7 @@ export class SnapshotService {
             SELECT *
             FROM snapshot
             WHERE implementator_id = ?
-            AND invoice_date BETWEEN ? AND ?
+            AND paid_date BETWEEN ? AND ?
         `, [salesId, startDate, endDate]);
         return rows as any[];
     }
@@ -111,7 +118,7 @@ export class SnapshotService {
             FROM snapshot
             JOIN employee ON snapshot.sales_id = employee.employee_id
             WHERE manager_sales_id = ?
-            AND invoice_date BETWEEN ? AND ?
+            AND paid_date BETWEEN ? AND ?
         `, [managerSalesId, startDate, endDate]);
         return rows;
     }
@@ -127,7 +134,7 @@ export class SnapshotService {
             FROM snapshot
             LEFT JOIN employee ON snapshot.sales_id = employee.employee_id
             WHERE snapshot.sales_id IN (${placeholders})
-            AND snapshot.invoice_date BETWEEN ? AND ?
+            AND snapshot.paid_date BETWEEN ? AND ?
         `, [...salesIds, startDate, endDate]);
         
         return rows as any[];
