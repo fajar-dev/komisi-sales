@@ -64,21 +64,21 @@ export class SnapshotController {
             const churnCount = await this.isService.getCustomerNaByImplementator(employeeId, startDate, endDate);
 
             const calculateCommission = (dpp: number, type: "base" | "retention" | "recurring") => {
-            if (type === "recurring") return dpp * 0.01;
-            if (type === "base") return dpp * 0.175;
-            if (type === "retention") return dpp * 0.2;
-            return 0;
+            if (type === "recurring") return { value: dpp * 0.01, percentage: 1 };
+            if (type === "base") return { value: dpp * 0.175, percentage: 17.5 };
+            if (type === "retention") return { value: dpp * 0.2, percentage: 20 };
+            return { value: 0, percentage: 0 };
             };
 
             const data: any[] = result.map((row: any) => {
             const dpp = Number(row.dpp || 0);
-            const percentage = Number(row.sales_commission_percentage || 0);
+            const rawPercentage = Number(row.sales_commission_percentage || 0);
 
             // recurring kalau pct = 1, selain itu base/retention tergantung churnCount
             const type: "base" | "retention" | "recurring" =
-                percentage === 1 ? "recurring" : churnCount > 0 ? "base" : "retention";
+                rawPercentage === 1 ? "recurring" : churnCount > 0 ? "base" : "retention";
 
-            const implementatorCommission = calculateCommission(dpp, type);
+            const { value: implementatorCommission, percentage: implementatorCommissionPercentage } = calculateCommission(dpp, type);
 
             return {
                 ai: row.ai,
@@ -101,7 +101,7 @@ export class SnapshotController {
 
                 // renamed fields
                 implementatorCommission,
-                implementatorCommissionPercentage: percentage,
+                implementatorCommissionPercentage,
             };
             });
 

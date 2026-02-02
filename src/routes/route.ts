@@ -30,7 +30,7 @@ route.get('/implementator/:id/invoice', (c) => new SnapshotController().implemen
 route.get('/manager/:id/team', (c) => new SnapshotController().managerTeamCommission(c));
 
 route.get('/employee/:id', authMiddleware, (c) => new EmployeeController().getEmployeeByEmployeeId(c));
-route.get('/employee/:id/hierarchy', authMiddleware, (c) => new EmployeeController().getEmployeeHierarchy(c));
+route.get('/employee/:id/hierarchy', (c) => new EmployeeController().getEmployeeHierarchy(c));
 
 
 export default route;
