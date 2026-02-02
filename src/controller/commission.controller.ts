@@ -216,7 +216,7 @@ export class CommissionController {
                     let dpp = parseFloat(row.dpp);
                     const commissionPercentage = parseFloat(row.sales_commission_percentage);
                     
-                    if (row.is_upgrade) {
+                    if (row.is_new || row.is_upgrade) {
                         const monthPeriod = row.month_period || row.month_periode || 1;
                         dpp = dpp / monthPeriod;
                     }

@@ -75,7 +75,7 @@ export class SnapshotController {
             let dpp = Number(row.dpp || 0);
             const rawPercentage = Number(row.sales_commission_percentage || 0);
 
-            if (row.is_upgrade) {
+            if (row.is_new || row.is_upgrade) {
                 const monthPeriod = row.month_period || row.month_periode || 1;
                 dpp = dpp / monthPeriod;
             }
