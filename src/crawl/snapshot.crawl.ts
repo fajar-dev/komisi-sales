@@ -11,13 +11,38 @@ export class SnapshotCrawl {
 
     async crawlInternalInvoice() {
         const { startDate, endDate } = this.periodHelper.getStartAndEndDateForCurrentMonth();
-        const rows = await this.isService.getIinternalByDateRange(startDate, endDate);
+        // const rows = await this.isService.getIinternalByDateRange(startDate, endDate);
+        const rows = await this.isService.getIinternalByDateRange('2025-12-26', '2026-01-25');
 
         const commissionData = rows.map((row: any) => {
             let isNew = false;
             let isUpgrade = false;
             let isTermin = false;
             let commissionPercentage = 0;
+            
+            let monthPeriod = 0;
+
+            if (row.AwalPeriode && row.AkhirPeriode) {
+                const startStr = String(row.AwalPeriode);
+                const endStr = String(row.AkhirPeriode);
+
+                const startYear = Number(startStr.slice(0, 4));
+                const startMonth = Number(startStr.slice(4, 6));
+                const endYear = Number(endStr.slice(0, 4));
+                const endMonth = Number(endStr.slice(4, 6));
+
+                if (
+                    Number.isFinite(startYear) &&
+                    Number.isFinite(startMonth) &&
+                    Number.isFinite(endYear) &&
+                    Number.isFinite(endMonth)
+                ) {
+                    monthPeriod =
+                        (endYear - startYear) * 12 +
+                        (endMonth - startMonth) +
+                        1;
+                }
+            }
 
             const newSubscription = Number(row.new_subscription ?? 0);
             const crossSellCount = Number(row.cross_sell_count ?? 0);
@@ -69,6 +94,7 @@ export class SnapshotCrawl {
                 ai: row.AI,
                 invoiceNumber: row.InvoiceNum,
                 invoiceDate: row.InvoiceDate,
+                monthPeriod,
                 dpp,
                 description,
                 customerServiceId: row.CustServId,

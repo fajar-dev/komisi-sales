@@ -2,6 +2,7 @@ CREATE TABLE snapshot (
     ai INT PRIMARY KEY,
     invoice_number BIGINT NULL,
     invoice_date TIMESTAMP NULL,
+    month_period INT NULL,
     dpp DECIMAL(15, 2) NULL,
     description TEXT NULL,
     customer_service_id INT NULL,

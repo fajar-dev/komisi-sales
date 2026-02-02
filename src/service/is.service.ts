@@ -6,7 +6,7 @@ export class IsService {
         let query = `
             SELECT 
                 nciit.AI, nciit.counter, nciit.new_subscription, nciit.dpp, nciit.is_prorata, nciit.is_upgrade,
-                cit.InvoiceNum, 
+                cit.InvoiceNum, cit.AwalPeriode, cit.AkhirPeriode, 
                 IFNULL(citc.InvoiceDate, cit.InvoiceDate) as InvoiceDate, 
                 cs.CustServId, cs.SalesId, cs.ManagerSalesId,
                 c.CustId, c.CustCompany, 

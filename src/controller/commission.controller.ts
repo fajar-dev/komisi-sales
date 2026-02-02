@@ -213,9 +213,14 @@ export class CommissionController {
                 let recurringTotal = 0;
 
                 rows.forEach((row: any) => {
-                    const dpp = parseFloat(row.dpp);
+                    let dpp = parseFloat(row.dpp);
                     const commissionPercentage = parseFloat(row.sales_commission_percentage);
                     
+                    if (row.is_upgrade) {
+                        const monthPeriod = row.month_period || row.month_periode || 1;
+                        dpp = dpp / monthPeriod;
+                    }
+
                     if (commissionPercentage === 1) {
                         recurringCount++;
                         recurringTotal += dpp * 0.01;

@@ -8,6 +8,7 @@ export class SnapshotService {
             ai,
             invoice_number,
             invoice_date,
+            month_period,
             dpp,
             description,
             customer_service_id,
@@ -28,10 +29,11 @@ export class SnapshotService {
             type,
             cross_sell_count
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON DUPLICATE KEY UPDATE
             invoice_number = VALUES(invoice_number),
             invoice_date = VALUES(invoice_date),
+            month_period = VALUES(month_period),
             dpp = VALUES(dpp),
             description = VALUES(description),
             customer_service_id = VALUES(customer_service_id),
@@ -56,6 +58,7 @@ export class SnapshotService {
             data.ai,
             data.invoiceNumber,
             data.invoiceDate,
+            data.monthPeriod,
             data.dpp,
             data.description,
             data.customerServiceId,

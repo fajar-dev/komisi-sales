@@ -23,6 +23,7 @@ export class SnapshotController {
             ai: row.ai,
             invoiceNumber: row.invoice_number,
             invoiceDate: row.invoice_date,
+            monthPeriod: row.month_period,
             dpp: row.dpp,
             customerServiceId: row.customer_service_id,
             customerId: row.customer_id,
@@ -71,8 +72,13 @@ export class SnapshotController {
             };
 
             const data: any[] = result.map((row: any) => {
-            const dpp = Number(row.dpp || 0);
+            let dpp = Number(row.dpp || 0);
             const rawPercentage = Number(row.sales_commission_percentage || 0);
+
+            if (row.is_upgrade) {
+                const monthPeriod = row.month_period || row.month_periode || 1;
+                dpp = dpp / monthPeriod;
+            }
 
             // recurring kalau pct = 1, selain itu base/retention tergantung churnCount
             const type: "base" | "retention" | "recurring" =
@@ -84,6 +90,7 @@ export class SnapshotController {
                 ai: row.ai,
                 invoiceNumber: row.invoice_number,
                 invoiceDate: row.invoice_date,
+                monthPeriod: row.month_period,
                 dpp: row.dpp,
                 customerServiceId: row.customer_service_id,
                 customerId: row.customer_id,
