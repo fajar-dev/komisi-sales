@@ -131,7 +131,11 @@ export class AuthController {
 
                 const tokens = await this.generateToken(employee);
 
-                return c.json(this.apiResponse.success("Token refreshed", { accessToken: tokens.accessToken, refreshToken: tokens.refreshToken }));
+                return c.json(this.apiResponse.success("Token refreshed", {
+                    accessToken: tokens.accessToken,
+                    refreshToken: tokens.refreshToken,
+                    user: employee
+                }));
 
             } catch (err) {
                 return c.json(this.apiResponse.error('Invalid refresh token'), 401);
