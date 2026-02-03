@@ -57,7 +57,7 @@ export class IsService {
                 s.ServiceId, s.ServiceType, s.ServiceLevel, s.BusinessOperation,
                 itm.Month,
                 nci.Description,
-                cit.GooglePaymentTermPlan,
+                cit.GooglePaymentTermPlan, cit.Urut,
                 IFNULL(cs.ResellerType, c.ResellerType)   AS ResellerType,
                 IFNULL(cs.ResellerTypeId, c.ResellerId)   AS ResellerTypeId
             FROM NewCustomerInvoiceInternetCounter nciit 

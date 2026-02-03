@@ -8,6 +8,7 @@ export class SnapshotService {
             INSERT INTO snapshot (
                 ai,
                 invoice_number,
+                position,
                 invoice_date,
                 paid_date,
                 month_period,
@@ -36,7 +37,7 @@ export class SnapshotService {
                 is_adjustment
             )
             SELECT
-                ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+                ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
             WHERE NOT EXISTS (
                 SELECT 1
                 FROM snapshot s
@@ -48,6 +49,7 @@ export class SnapshotService {
             // INSERT values
             data.ai,
             data.invoiceNumber,
+            data.position,
             data.invoiceDate,
             data.paidDate ?? null,
             data.monthPeriod,

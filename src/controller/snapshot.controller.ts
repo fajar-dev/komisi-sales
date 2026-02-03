@@ -22,6 +22,7 @@ export class SnapshotController {
             const data: any[] = result.map((row: any) => ({
             ai: row.ai,
             invoiceNumber: row.invoice_number,
+            position: row.position,
             invoiceDate: row.invoice_date,
             paidDate: row.paid_date,
             monthPeriod: row.month_period,
@@ -94,6 +95,7 @@ export class SnapshotController {
             return {
                 ai: row.ai,
                 invoiceNumber: row.invoice_number,
+                position: row.position,
                 invoiceDate: row.invoice_date,
                 paidDate: row.paid_date,
                 monthPeriod: row.month_period,

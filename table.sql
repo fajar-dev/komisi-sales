@@ -1,6 +1,7 @@
 CREATE TABLE snapshot (
     ai INT PRIMARY KEY,
     invoice_number BIGINT NULL,
+    position INT NULL,
     invoice_date TIMESTAMP NULL,
     paid_date TIMESTAMP NULL,
     month_period INT NULL,
@@ -24,7 +25,7 @@ CREATE TABLE snapshot (
     sales_commission_percentage DECIMAL(5, 2) NULL,
     referral_id VARCHAR(20) NULL,
     type ENUM('internal', 'resell') NOT NULL,
-    type_sub ENUM('flex', 'annual_yearly', 'annual_monthly',) NULL,
+    type_sub ENUM('flex', 'annual_yearly', 'annual_monthly') NULL,
     cross_sell_count INT NOT NULL DEFAULT 0,
     is_adjustment BOOLEAN NOT NULL DEFAULT false
 );
