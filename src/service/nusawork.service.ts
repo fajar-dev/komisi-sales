@@ -78,4 +78,29 @@ export class Nusawork {
             managerId: emp.id_report_to_value,
         }))
     }
+
+    /**
+     * Ambil daftar account manager digital business dari Nusawork.
+     */
+    static async getEmployeeAdmin(): Promise<any[]> {
+        const employees = await this.getEmployees()
+
+        const accountManager = employees.filter((emp: any) =>
+            emp.employee_id === '0202589' ||
+            emp.employee_id === '0200306'
+        )
+
+        return accountManager.map((emp: any) => ({
+            userId: emp.user_id,
+            employeeId: emp.employee_id,
+            name: emp.full_name,
+            email: emp.email,
+            photoProfile: emp.photo_profile,
+            jobPosition: emp.job_position,
+            organizationName: emp.organization_name,
+            jobLevel: emp.job_level,
+            branch: emp.branch_name,
+            managerId: null,
+        }))
+    }
 }

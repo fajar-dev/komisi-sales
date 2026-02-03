@@ -81,6 +81,13 @@ export class EmployeeService {
     }
 
     static async getHierarchy(employeeId: string) {
+        const employee: any = await this.getEmployeeByEmployeeId(employeeId);
+
+        if (employee && employee.manager_id == null) {
+            const [rows]: any[] = await pool.query(`SELECT * FROM employee WHERE has_dashboard = true`);
+            return Array.isArray(rows) ? rows : [];
+        }
+
         const [rows]: any[] = await pool.query(`
             WITH RECURSIVE employee_hierarchy AS (
                 SELECT *, 0 as depth

@@ -5,6 +5,7 @@ CREATE TABLE snapshot (
     paid_date TIMESTAMP NULL,
     month_period INT NULL,
     dpp DECIMAL(15, 2) NULL,
+    new_sub DECIMAL(15, 2) NULL,
     modal DECIMAL(15, 2) DEFAULT 0,
     description TEXT NULL,
     customer_service_id INT NULL,
@@ -23,8 +24,22 @@ CREATE TABLE snapshot (
     sales_commission_percentage DECIMAL(5, 2) NULL,
     referral_id VARCHAR(20) NULL,
     type ENUM('internal', 'resell') NOT NULL,
-    cross_sell_count INT NOT NULL DEFAULT 0
+    type_sub ENUM('flex', 'annual_yearly', 'annual_monthly',) NULL,
+    cross_sell_count INT NOT NULL DEFAULT 0,
     is_adjustment BOOLEAN NOT NULL DEFAULT false
+);
+
+CREATE TABLE adjustment (
+    id INT PRIMARY KEY,
+    ai INT NOT NULL,
+    employee_id VARCHAR(20) NOT NULL,
+    approved_id VARCHAR(20) NULL,
+    old_value JSON NULL,
+    new_value JSON NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    action ENUM('insert', 'update', 'delete') NOT NULL
+    status ENUM('pending', 'accept', 'decline') NOT NULL DEFAULT 'pending'
 );
 
 CREATE TABLE employee (

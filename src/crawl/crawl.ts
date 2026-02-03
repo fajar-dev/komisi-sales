@@ -12,8 +12,11 @@ class Crawl {
             console.log("Starting the invoice crawl...");
             await this.snapshotCrawl.crawlInternalInvoice();
             console.log("Invoice crawl finished.");
+            console.log("Starting the invoice crawl...");
+            await this.snapshotCrawl.crawlResellInvoice();
+            console.log("Invoice crawl finished.");
             console.log("Starting the employee crawl...");
-            // await this.employeeCrawl.crawlEmployee();
+            await this.employeeCrawl.crawlEmployee();
             console.log("Employee crawl finished.");
             process.exit(0); 
         } catch (error) {

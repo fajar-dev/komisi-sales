@@ -26,6 +26,7 @@ export class SnapshotController {
             paidDate: row.paid_date,
             monthPeriod: row.month_period,
             dpp: row.dpp,
+            newSub: row.new_sub,
             customerServiceId: row.customer_service_id,
             customerId: row.customer_id,
             customerCompany: row.customer_company,
@@ -40,6 +41,8 @@ export class SnapshotController {
             isUpgrade: row.is_upgrade,
             isTermin: row.is_termin,
             isAdjustment: row.is_adjustment,
+            type: row.type,
+            typeSub: row.type_sub,
             salesCommission: row.sales_commission,
             salesCommissionPercentage: row.sales_commission_percentage,
             }));
@@ -95,6 +98,7 @@ export class SnapshotController {
                 paidDate: row.paid_date,
                 monthPeriod: row.month_period,
                 dpp: row.dpp,
+                newSub: row.new_sub,
                 customerServiceId: row.customer_service_id,
                 customerId: row.customer_id,
                 customerCompany: row.customer_company,
@@ -109,6 +113,8 @@ export class SnapshotController {
                 isUpgrade: row.is_upgrade,
                 isTermin: row.is_termin,
                 isAdjustment: row.is_adjustment,
+                type: row.type,
+                typeSub: row.type_sub,
                 // renamed fields
                 implementatorCommission,
                 implementatorCommissionPercentage,

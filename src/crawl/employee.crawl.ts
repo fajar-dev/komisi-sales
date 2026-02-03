@@ -13,5 +13,11 @@ export class EmployeeCrawl {
             await this.employeeService.insertEmployee(data);
             console.log("Employee inserted: ", data.employeeId);
         }
+
+        const admin = await this.nusaworkService.getEmployeeAdmin()
+        for (const data of admin) {
+            await this.employeeService.insertEmployee(data);
+            console.log("Employee inserted: ", data.employeeId);
+        }
     }
 }
