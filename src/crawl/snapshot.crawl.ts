@@ -204,11 +204,7 @@ export class SnapshotCrawl {
                 commissionPercentage = 0;
             } else if (row.counter > 1 && String(row.new_subscription) === "0.00") {
                 // Recurring 0.5%
-                if (row.GooglePaymentTermPlan) {
-                    commissionPercentage = 0;
-                } else {
-                    commissionPercentage = 0.5;
-                }
+                commissionPercentage = 0.5;
             } else if (newSubscription > 0 && crossSellCount > 0) {
                 commissionPercentage = 0;
 
@@ -219,6 +215,12 @@ export class SnapshotCrawl {
 
                 if (row.is_upgrade === 1 || row.is_prorata === 1) isUpgrade = true;
                 if (row.is_prorata === 0 && row.is_upgrade === 0) isNew = true;
+            }
+
+            // FORCE RULE: Google Payment Term Plan -> 0 commission
+            // This overrides any previous calculation (recurring, etc.)
+            if (row.GooglePaymentTermPlan) {
+                commissionPercentage = 0;
             }
 
             const commissionAmount = dpp * (commissionPercentage / 100);
