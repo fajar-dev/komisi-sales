@@ -193,6 +193,9 @@ export class SnapshotController {
             // Group snapshots by sales_id and sum commission
             const commissionMap = new Map<string, number>();
             snapshots.forEach((row: any) => {
+                if (row.is_deleted === 1 || row.is_deleted === true) return;
+                if (row.is_upgrade === 1 && row.upgrade_count > 1) return;
+
                 const salesId = row.sales_id;
                 const commission = parseFloat(row.sales_commission) || 0;
                 const current = commissionMap.get(salesId) || 0;
