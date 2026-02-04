@@ -66,7 +66,7 @@ export class EmployeeService {
 
     static async getEmployeeByEmployeeId(employeeId: string) {
         const [rows] = await pool.query<RowDataPacket[]>(
-            `SELECT e1.*, e2.name as managerName, e2.employee_id as managerEmployeeId, e2.photo_profile as managerPhotoProfile FROM employee e1 JOIN employee e2 ON e1.manager_id = e2.id WHERE e1.employee_id = ? LIMIT 1`,
+            `SELECT e1.*, e2.name as managerName, e2.employee_id as managerEmployeeId, e2.photo_profile as managerPhotoProfile FROM employee e1 LEFT JOIN employee e2 ON e1.manager_id = e2.id WHERE e1.employee_id = ? LIMIT 1`,
             [employeeId]
         );
         return rows.length > 0 ? rows[0] : null;

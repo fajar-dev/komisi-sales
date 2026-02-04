@@ -32,7 +32,7 @@ route.get('/implementator/:id/invoice', authMiddleware, hierarchyMiddleware, (c)
 route.get('/manager/:id/team', authMiddleware, hierarchyMiddleware, (c) => new SnapshotController().managerTeamCommission(c));
 
 route.get('/employee/:id', authMiddleware, (c) => new EmployeeController().getEmployeeByEmployeeId(c));
-route.get('/employee/:id/hierarchy', authMiddleware, (c) => new EmployeeController().getEmployeeHierarchy(c));
+route.get('/employee/:id/hierarchy', (c) => new EmployeeController().getEmployeeHierarchy(c));
 
 route.get('/adjustment', authMiddleware, (c) => new AdjustmentController().getAdjustment(c));
 route.post('/adjustment', authMiddleware, (c) => new AdjustmentController().insertAdjustment(c));

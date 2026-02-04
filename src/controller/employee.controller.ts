@@ -25,10 +25,6 @@ export class EmployeeController {
         try {
             const employeeId = c.req.param('id');
             const hierarchy = await this.employeeService.getHierarchy(employeeId);
-            
-            if (!hierarchy || hierarchy.length === 0) {
-                return c.json(this.apiResponse.error('Employee not found'), 404);
-            }
 
             return c.json(this.apiResponse.success("Employee hierarchy retrieved successfully", hierarchy));
         } catch (error: any) {
