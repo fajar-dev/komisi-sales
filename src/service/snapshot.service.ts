@@ -88,7 +88,7 @@ export class SnapshotService {
 
     static async getSnapshotBySales(salesId: string, startDate: string, endDate: string) {
         const [rows] = await pool.query(`
-            SELECT s.*
+            SELECT s.* 
             FROM snapshot s
             LEFT JOIN adjustment a 
                 ON s.ai = a.ai
