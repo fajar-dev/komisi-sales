@@ -61,6 +61,7 @@ export class CommissionController {
 
                     rows.forEach((row: any) => {
                         if (row.is_deleted === 1 || row.is_deleted === true) return;
+                        if (row.is_upgrade === 1 && row.upgrade_count > 1) return;
 
                         const commissionAmount = toNum(row.sales_commission);
                         const commissionPercentage = toNum(row.sales_commission_percentage);

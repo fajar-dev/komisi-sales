@@ -27,8 +27,9 @@ CREATE TABLE snapshot (
     type ENUM('internal', 'resell') NOT NULL,
     type_sub ENUM('flex', 'annual_yearly', 'annual_monthly') NULL,
     cross_sell_count INT NOT NULL DEFAULT 0,
+    upgrade_count INT NOT NULL DEFAULT 0
     is_adjustment BOOLEAN NOT NULL DEFAULT false,
-    is_deleted BOOLEAN NOT NULL DEFAULT false
+    is_deleted BOOLEAN NOT NULL DEFAULT false,
 );
 
 CREATE TABLE adjustment (

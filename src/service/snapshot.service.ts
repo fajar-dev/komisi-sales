@@ -34,10 +34,11 @@ export class SnapshotService {
                 type_sub,
                 type,
                 cross_sell_count,
-                is_adjustment
+                is_adjustment,
+                upgrade_count
             )
             SELECT
-                ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+                ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
             WHERE NOT EXISTS (
                 SELECT 1
                 FROM snapshot s
@@ -76,6 +77,7 @@ export class SnapshotService {
             data.type,
             data.crossSellCount ?? 0,
             data.isAdjustment ?? false,
+            data.upgradeCount ?? 0,
 
             // GUARD: PRIMARY KEY
             data.ai

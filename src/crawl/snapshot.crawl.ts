@@ -11,8 +11,8 @@ export class SnapshotCrawl {
 
     async crawlInternalInvoice() {
         const { startDate, endDate } = this.periodHelper.getStartAndEndDateForCurrentMonth();
-        const rows = await this.isService.getIinternalByDateRange(startDate, endDate);
-        // const rows = await this.isService.getIinternalByDateRange('2025-12-26', '2026-01-25');
+        // const rows = await this.isService.getIinternalByDateRange(startDate, endDate);
+        const rows = await this.isService.getIinternalByDateRange('2025-12-26', '2026-01-25');
 
         const commissionData = rows.map((row: any) => {
             let isNew = false;
@@ -131,7 +131,8 @@ export class SnapshotCrawl {
                 referralId: referral,
                 crossSellCount: row.cross_sell_count,
                 typeSub: null,
-                type: row.BusinessOperation
+                type: row.BusinessOperation,
+                upgradeCount: 0
             };
         });
 
@@ -142,12 +143,9 @@ export class SnapshotCrawl {
                 continue;
             }
 
-            // if (data.isUpgrade && data.newSub) {
-            //     // Skip if upgrade amount is less than 20% of DPP
-            //     if (data.newSub < (data.dpp * 0.2)) {
-            //         continue;
-            //     }
-            // }
+            if (data.isUpgrade) {
+                data.upgradeCount = await this.isService.getUpgradeCount(data.customerServiceId, data.ai);
+            }
 
             if (data.serviceGroupId === 'SV' && data.dpp < 500000) {
                 continue;
@@ -159,8 +157,8 @@ export class SnapshotCrawl {
 
     async crawlResellInvoice() {
         const { startDate, endDate } = this.periodHelper.getStartAndEndDateForCurrentMonth();
-        const rows = await this.isService.getResellByDateRange(startDate, endDate);
-        // const rows = await this.isService.getResellByDateRange('2025-12-26', '2026-01-25');
+        // const rows = await this.isService.getResellByDateRange(startDate, endDate);
+        const rows = await this.isService.getResellByDateRange('2025-12-26', '2026-01-25');
 
         const commissionData = rows.map((row: any) => {
             let isNew = false;
@@ -259,12 +257,16 @@ export class SnapshotCrawl {
                 referralId: referral,
                 crossSellCount: row.cross_sell_count,
                 typeSub: row.GooglePaymentTermPlan,
-                type: row.BusinessOperation
+                type: row.BusinessOperation,
+                upgradeCount: 0
             };
         });
 
         
         for (const data of commissionData) {
+            if (data.isUpgrade) {
+                data.upgradeCount = await this.isService.getUpgradeCount(data.customerServiceId, data.ai);
+            }
             await this.snapshotService.insertSnapshot(data);
             console.log("Invoice inserted:", data.invoiceNumber);
         }

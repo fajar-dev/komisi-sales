@@ -47,12 +47,18 @@ export class SnapshotController {
             typeSub: row.type_sub,
             salesCommission: row.sales_commission,
             salesCommissionPercentage: row.sales_commission_percentage,
+            upgradeCount: row.upgrade_count
             }));
+
+            const filteredData = data.filter(inv => {
+                 if (inv.isUpgrade && inv.upgradeCount > 1) return false;
+                 return true;
+            });
 
             let totalCommission = 0;
             let totalDpp = 0;
 
-            data.forEach((inv) => {
+            filteredData.forEach((inv) => {
                 if (!inv.isDeleted) {
                     totalCommission += Number(inv.salesCommission || 0);
                     totalDpp += Number(inv.dpp || 0);
@@ -61,7 +67,7 @@ export class SnapshotController {
 
             return c.json(
             this.apiResponse.success("Invoice retrived successfuly", {
-                data,
+                data: filteredData,
                 totalCommission,
                 totalDpp,
             })
