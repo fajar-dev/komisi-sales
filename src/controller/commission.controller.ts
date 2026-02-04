@@ -60,6 +60,8 @@ export class CommissionController {
                     let resellRecurringTotal = 0;
 
                     rows.forEach((row: any) => {
+                        if (row.is_deleted === 1 || row.is_deleted === true) return;
+
                         const commissionAmount = toNum(row.sales_commission);
                         const commissionPercentage = toNum(row.sales_commission_percentage);
 
@@ -213,6 +215,8 @@ export class CommissionController {
                 let recurringTotal = 0;
 
                 rows.forEach((row: any) => {
+                    if (row.is_deleted === 1 || row.is_deleted === true) return;
+
                     let dpp = parseFloat(row.dpp);
                     const commissionPercentage = parseFloat(row.sales_commission_percentage);
                     
@@ -295,6 +299,8 @@ export class CommissionController {
                 });
 
                 (rows as any[]).forEach((row: any) => {
+                    if (row.is_deleted === 1 || row.is_deleted === true) return;
+                    
                     const salesName = row.name || row.sales_id; 
                     const commissionAmount = parseFloat(row.sales_commission || 0);
 

@@ -88,26 +88,28 @@ export class SnapshotService {
 
     static async getSnapshotBySales(salesId: string, startDate: string, endDate: string) {
         const [rows] = await pool.query(`
-            SELECT *
+            SELECT s.*
             FROM snapshot s
             LEFT JOIN adjustment a 
                 ON s.ai = a.ai
             WHERE s.sales_id = ?
             AND s.paid_date BETWEEN ? AND ?
              AND NOT (s.is_upgrade = 1 AND s.new_sub > 0 AND s.new_sub < (s.dpp * 0.2))
+             group by s.ai
         `, [salesId, startDate, endDate]);
         return rows as any[];
     }
 
     static async getSnapshotByImplementator(salesId: string, startDate: string, endDate: string) {
         const [rows] = await pool.query(`
-            SELECT *
+            SELECT s.*
             FROM snapshot s
             LEFT JOIN adjustment a 
                 ON s.ai = a.ai
             WHERE s.implementator_id = ?
             AND s.paid_date BETWEEN ? AND ?
             AND s.service_group_id = 'NW'
+            group by s.ai
         `, [salesId, startDate, endDate]);
         return rows as any[];
     }
@@ -138,6 +140,39 @@ export class SnapshotService {
         `, [...salesIds, startDate, endDate]);
         
         return rows as any[];
+    }
+
+    static async updateSnapshot(ai: number, data: any, isDeleted: boolean) {
+        const [rows] = await pool.query(`
+            UPDATE snapshot
+            SET 
+                paid_date = ?,
+                month_period = ?,
+                sales_commission = ?,
+                sales_commission_percentage = ?,
+                is_adjustment = ?,
+                is_deleted = ?
+            WHERE ai = ?
+        `, [
+            data.paidDate,
+            data.monthPeriod,
+            data.salesCommission,
+            data.salesCommissionPercentage,
+            true,
+            isDeleted,
+            ai
+        ]);
+        return rows;
+    }
+
+    static async getSnapshotByAi(ai: string) {
+        const [rows] = await pool.query(`
+            SELECT *
+            FROM snapshot
+            WHERE ai = ?
+            LIMIT 1
+        `, [ai]);
+        return (rows as any[])[0];
     }
 
 }

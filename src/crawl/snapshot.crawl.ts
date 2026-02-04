@@ -106,6 +106,7 @@ export class SnapshotCrawl {
             return {
                 ai: row.AI,
                 invoiceNumber: row.InvoiceNum,
+                position: row.Urut,
                 invoiceDate: row.InvoiceDate,
                 paidDate: row.trx_date,
                 monthPeriod,
@@ -233,6 +234,7 @@ export class SnapshotCrawl {
             return {
                 ai: row.AI,
                 invoiceNumber: row.InvoiceNum,
+                position: row.Urut,
                 invoiceDate: row.InvoiceDate,
                 paidDate: row.trx_date,
                 monthPeriod,

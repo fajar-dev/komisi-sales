@@ -14,7 +14,7 @@ export class IsService {
                 c.Surveyor,
                 itm.Month,
                 nci.Description,
-                cit.GooglePaymentTermPlan,
+                cit.GooglePaymentTermPlan, cit.Urut,
                 IFNULL(cs.ResellerType, c.ResellerType)   AS ResellerType,
                 IFNULL(cs.ResellerTypeId, c.ResellerId)   AS ResellerTypeId,
                 (

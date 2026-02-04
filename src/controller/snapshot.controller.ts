@@ -42,25 +42,34 @@ export class SnapshotController {
             isUpgrade: row.is_upgrade,
             isTermin: row.is_termin,
             isAdjustment: row.is_adjustment,
+            isDeleted: row.is_deleted,
             type: row.type,
             typeSub: row.type_sub,
             salesCommission: row.sales_commission,
             salesCommissionPercentage: row.sales_commission_percentage,
             }));
 
-            const total = data.reduce((sum, inv) => sum + Number(inv.salesCommission || 0), 0);
+            let totalCommission = 0;
+            let totalDpp = 0;
+
+            data.forEach((inv) => {
+                if (!inv.isDeleted) {
+                    totalCommission += Number(inv.salesCommission || 0);
+                    totalDpp += Number(inv.dpp || 0);
+                }
+            });
 
             return c.json(
             this.apiResponse.success("Invoice retrived successfuly", {
                 data,
-                total,
+                totalCommission,
+                totalDpp,
             })
             );
         } catch (error: any) {
             return c.json(this.apiResponse.error("Failed to retrieve snapshot", error.message));
         }
     }
-
 
     async implementatorInvoice(c: Context) {
         try {
@@ -115,6 +124,7 @@ export class SnapshotController {
                 isUpgrade: row.is_upgrade,
                 isTermin: row.is_termin,
                 isAdjustment: row.is_adjustment,
+                isDeleted: row.is_deleted,
                 type: row.type,
                 typeSub: row.type_sub,
                 // renamed fields
@@ -123,13 +133,22 @@ export class SnapshotController {
             };
             });
 
-            const total = data.reduce((sum, inv) => sum + Number(inv.implementatorCommission || 0), 0);
+            let totalCommission = 0;
+            let totalDpp = 0;
+
+            data.forEach((inv) => {
+                if (!inv.isDeleted) {
+                    totalCommission += Number(inv.implementatorCommission || 0);
+                    totalDpp += Number(inv.dpp || 0);
+                }
+            });
 
             return c.json(
             this.apiResponse.success("Snapshot retrieved successfully", {
                 churnCount,
                 data,
-                total,
+                totalCommission,
+                totalDpp,
             })
             );
         } catch (error: any) {
@@ -189,6 +208,52 @@ export class SnapshotController {
 
         } catch (error: any) {
             return c.json(this.apiResponse.error("Failed to retrieve hierarchy commission", error.message));
+        }
+    }
+
+    async salesSnapshotByAi(c: Context) {
+        try {
+            const ai = c.req.param('ai');
+            const row: any = await this.snapshotService.getSnapshotByAi(ai);
+
+            if (!row) {
+                return c.json(this.apiResponse.error("Snapshot not found"), 404);
+            }
+
+            const data = {
+                ai: row.ai,
+                invoiceNumber: row.invoice_number,
+                position: row.position,
+                invoiceDate: row.invoice_date,
+                paidDate: row.paid_date,
+                monthPeriod: row.month_period,
+                dpp: row.dpp,
+                newSub: row.new_sub,
+                customerServiceId: row.customer_service_id,
+                customerId: row.customer_id,
+                customerCompany: row.customer_company,
+                serviceGroupId: row.service_group_id,
+                serviceId: row.service_id,
+                serviceName: row.service_name,
+                salesId: row.sales_id,
+                managerSalesId: row.manager_sales_id,
+                implementatorId: row.implementator_id,
+                referralId: row.referral_id,
+                isNew: row.is_new,
+                isUpgrade: row.is_upgrade,
+                isTermin: row.is_termin,
+                isAdjustment: row.is_adjustment,
+                type: row.type,
+                typeSub: row.type_sub,
+                salesCommission: row.sales_commission,
+                salesCommissionPercentage: row.sales_commission_percentage,
+            };
+            
+            return c.json(
+                this.apiResponse.success("Invoice retrived successfuly", data)
+            );
+        } catch (error: any) {
+            return c.json(this.apiResponse.error("Failed to retrieve snapshot", error.message));
         }
     }
 }

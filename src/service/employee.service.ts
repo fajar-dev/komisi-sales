@@ -1,4 +1,5 @@
 import { pool } from "../config/database"
+import { RowDataPacket } from "mysql2"
 
 export class EmployeeService {
     static async insertEmployee(data: any) {
@@ -46,7 +47,7 @@ export class EmployeeService {
     }
 
     static async getManagerById(employeeId: string) {
-        const [rows] = await pool.query(`
+        const [rows] = await pool.query<RowDataPacket[]>(`
             SELECT *
             FROM employee
             WHERE employee_id = ?
@@ -55,7 +56,7 @@ export class EmployeeService {
     }
 
     static async getStaff(managerId: string) {
-        const [rows] = await pool.query(`
+        const [rows] = await pool.query<RowDataPacket[]>(`
             SELECT *
             FROM employee
             WHERE manager_id = ?
@@ -64,20 +65,28 @@ export class EmployeeService {
     }
 
     static async getEmployeeByEmployeeId(employeeId: string) {
-        const [rows] = await pool.query(
-            `SELECT * FROM employee WHERE employee_id = ? LIMIT 1`,
+        const [rows] = await pool.query<RowDataPacket[]>(
+            `SELECT e1.*, e2.name as managerName, e2.employee_id as managerEmployeeId, e2.photo_profile as managerPhotoProfile FROM employee e1 JOIN employee e2 ON e1.manager_id = e2.id WHERE e1.employee_id = ? LIMIT 1`,
             [employeeId]
         );
-        return Array.isArray(rows) && rows.length > 0 ? rows[0] : null;
+        return rows.length > 0 ? rows[0] : null;
+    }
+
+    static async getEmployeeById(id: string) {
+        const [rows] = await pool.query<RowDataPacket[]>(
+            `SELECT * FROM employee WHERE id = ? LIMIT 1`,
+            [id]
+        );
+        return rows.length > 0 ? rows[0] : null;
     }
 
     static async getEmployeeByEmail(email: string) {
-        const [rows] = await pool.query(
+        const [rows] = await pool.query<RowDataPacket[]>(
             `SELECT * FROM employee WHERE email = ? LIMIT 1`,
             [email]
         );
 
-        return Array.isArray(rows) && rows.length > 0 ? rows[0] : null;
+        return rows.length > 0 ? rows[0] : null;
     }
 
     static async getHierarchy(employeeId: string) {

@@ -27,19 +27,21 @@ CREATE TABLE snapshot (
     type ENUM('internal', 'resell') NOT NULL,
     type_sub ENUM('flex', 'annual_yearly', 'annual_monthly') NULL,
     cross_sell_count INT NOT NULL DEFAULT 0,
-    is_adjustment BOOLEAN NOT NULL DEFAULT false
+    is_adjustment BOOLEAN NOT NULL DEFAULT false,
+    is_deleted BOOLEAN NOT NULL DEFAULT false
 );
 
 CREATE TABLE adjustment (
-    id INT PRIMARY KEY,
+    id INT AUTO_INCREMENT PRIMARY KEY,
     ai INT NOT NULL,
     employee_id VARCHAR(20) NOT NULL,
     approved_id VARCHAR(20) NULL,
     old_value JSON NULL,
     new_value JSON NULL,
+    note TEXT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    action ENUM('insert', 'update', 'delete') NOT NULL
+    action ENUM('insert', 'update', 'delete') NOT NULL,
     status ENUM('pending', 'accept', 'decline') NOT NULL DEFAULT 'pending'
 );
 

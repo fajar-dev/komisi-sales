@@ -41,6 +41,7 @@ export class AuthController {
         const now = Math.floor(Date.now() / 1000);
         const accessTokenPayload = {
             sub: employee.employee_id,
+            svp: employee.manager_id,
             email: employee.email,
             role: employee.job_position,
             exp: now + 60 * 15, // 15 minutes

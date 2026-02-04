@@ -18,6 +18,7 @@ route.post('/auth/logout', (c) => authController.logout(c));
 import { hierarchyMiddleware } from '../middleware/hierarchy.middleware';
 import { SnapshotController } from '../controller/snapshot.controller';
 import { AdditionalController } from '../controller/additional.controller';
+import { AdjustmentController } from '../controller/adjustment.controller';
 
 route.get('/additional', (c) => new AdditionalController().getPeriod(c));
 
@@ -26,11 +27,17 @@ route.get('/implementator/:id/commission', authMiddleware, hierarchyMiddleware, 
 route.get('/manager/:id/commission', authMiddleware, hierarchyMiddleware, (c) => new CommissionController().managerCommission(c));
 
 route.get('/sales/:id/invoice', authMiddleware, hierarchyMiddleware, (c) => new SnapshotController().salesInvoice(c));
+route.get('/sales/:id/invoice/:ai', authMiddleware, hierarchyMiddleware, (c) => new SnapshotController().salesSnapshotByAi(c));
 route.get('/implementator/:id/invoice', authMiddleware, hierarchyMiddleware, (c) => new SnapshotController().implementatorInvoice(c));
 route.get('/manager/:id/team', authMiddleware, hierarchyMiddleware, (c) => new SnapshotController().managerTeamCommission(c));
 
 route.get('/employee/:id', authMiddleware, (c) => new EmployeeController().getEmployeeByEmployeeId(c));
 route.get('/employee/:id/hierarchy', authMiddleware, (c) => new EmployeeController().getEmployeeHierarchy(c));
 
+route.get('/adjustment', authMiddleware, (c) => new AdjustmentController().getAdjustment(c));
+route.post('/adjustment', authMiddleware, (c) => new AdjustmentController().insertAdjustment(c));
+route.post('/adjustment/:id/accept', authMiddleware, (c) => new AdjustmentController().acceptAdjustment(c));
+route.post('/adjustment/:id/decline', authMiddleware, (c) => new AdjustmentController().declineAdjustment(c));
+route.get('/adjustment/history', authMiddleware, (c) => new AdjustmentController().getAdjustmentHistory(c));
 
 export default route;
