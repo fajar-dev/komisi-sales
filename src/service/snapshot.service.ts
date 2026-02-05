@@ -148,16 +148,14 @@ export class SnapshotService {
         const [rows] = await pool.query(`
             UPDATE snapshot
             SET 
-                paid_date = ?,
-                month_period = ?,
+                modal = ?,
                 sales_commission = ?,
                 sales_commission_percentage = ?,
                 is_adjustment = ?,
                 is_deleted = ?
             WHERE ai = ?
         `, [
-            data.paidDate,
-            data.monthPeriod,
+            data.modal,
             data.salesCommission,
             data.salesCommissionPercentage,
             true,

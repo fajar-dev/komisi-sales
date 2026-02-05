@@ -51,7 +51,7 @@ export class SnapshotController {
             }));
 
             const filteredData = data.filter(inv => {
-                 if (inv.isUpgrade && inv.upgradeCount > 1) return false;
+                 // if (inv.isUpgrade && inv.upgradeCount > 1) return false;
                  return true;
             });
 
@@ -194,7 +194,7 @@ export class SnapshotController {
             const commissionMap = new Map<string, number>();
             snapshots.forEach((row: any) => {
                 if (row.is_deleted === 1 || row.is_deleted === true) return;
-                if (row.is_upgrade === 1 && row.upgrade_count > 1) return;
+                // if (row.is_upgrade === 1 && row.upgrade_count > 1) return;
 
                 const salesId = row.sales_id;
                 const commission = parseFloat(row.sales_commission) || 0;
@@ -216,7 +216,7 @@ export class SnapshotController {
             }));
 
         } catch (error: any) {
-            return c.json(this.apiResponse.error("Failed to retrieve hierarchy commission", error.message));
+            return c.json(this.apiResponse.error("Failed to retrieve hierarchy commission", error.message), 500);
         }
     }
 
@@ -253,6 +253,7 @@ export class SnapshotController {
                 isTermin: row.is_termin,
                 isAdjustment: row.is_adjustment,
                 type: row.type,
+                modal: row.modal,
                 typeSub: row.type_sub,
                 salesCommission: row.sales_commission,
                 salesCommissionPercentage: row.sales_commission_percentage,
@@ -262,7 +263,7 @@ export class SnapshotController {
                 this.apiResponse.success("Invoice retrived successfuly", data)
             );
         } catch (error: any) {
-            return c.json(this.apiResponse.error("Failed to retrieve snapshot", error.message));
+            return c.json(this.apiResponse.error("Failed to retrieve snapshot", error.message), 500);
         }
     }
 }

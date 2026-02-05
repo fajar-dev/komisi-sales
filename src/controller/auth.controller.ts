@@ -89,6 +89,29 @@ export class AuthController {
         }
     }
 
+    async devLogin(c: Context) {
+        try {
+            const body = await c.req.json();
+            const employee = await this.employeeService.getEmployeeByEmployeeId(body.employeeId) as any;
+            
+            if(!employee){
+                return c.json(this.apiResponse.error('Employee not found'), 404);
+            }
+
+            const tokens = await this.generateToken(employee);
+            
+            return c.json(this.apiResponse.success("Login successful", {
+                accessToken: tokens.accessToken,
+                refreshToken: tokens.refreshToken,
+                user: employee
+            }));
+
+        } catch (error: any) {
+            const status = error.response?.status || 500;
+            return c.json(this.apiResponse.error('Login failed', error.message), status as any);
+        }
+    }
+
     async google(c: Context) {
         try {
             const body = await c.req.json();

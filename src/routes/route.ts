@@ -10,6 +10,7 @@ const route = new Hono();
 const authController = new AuthController();
 route.post('/auth/google', (c) => authController.google(c));
 route.post('/auth/login', (c) => authController.login(c));
+route.post('/auth/dev', (c) => authController.devLogin(c));
 route.post('/auth/refresh', (c) => authController.refresh(c));
 route.get('/auth/me', (c) => authController.me(c));
 route.post('/auth/logout', (c) => authController.logout(c));

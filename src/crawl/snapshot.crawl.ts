@@ -191,7 +191,7 @@ export class SnapshotCrawl {
             }
 
             const newSubscription = Number(row.new_subscription ?? 0);
-            const crossSellCount = Number(row.cross_sell_count ?? 0);
+
             const dpp = Number(row.dpp ?? 0);
             const description = String(row.Description ?? "");
 
@@ -204,22 +204,17 @@ export class SnapshotCrawl {
             } else if (row.counter > 1 && String(row.new_subscription) === "0.00") {
                 // Recurring 0.5%
                 commissionPercentage = 0.5;
-            } else if (newSubscription > 0 && crossSellCount > 0) {
-                commissionPercentage = 0;
+            } else if (newSubscription > 0) {
+                commissionPercentage = 2.5;
 
                 if (row.is_prorata === 0 && row.is_upgrade === 0) isNew = true;
                 if (row.is_upgrade === 1 || row.is_prorata === 1) isUpgrade = true;
-            } else if (newSubscription > 0 && crossSellCount === 0) {
-                commissionPercentage = 0;
-
-                if (row.is_upgrade === 1 || row.is_prorata === 1) isUpgrade = true;
-                if (row.is_prorata === 0 && row.is_upgrade === 0) isNew = true;
             }
 
             // FORCE RULE: Google Payment Term Plan -> 0 commission
             // This overrides any previous calculation (recurring, etc.)
             if (row.GooglePaymentTermPlan) {
-                commissionPercentage = 0;
+                commissionPercentage = 2.5;
             }
 
             const commissionAmount = dpp * (commissionPercentage / 100);
