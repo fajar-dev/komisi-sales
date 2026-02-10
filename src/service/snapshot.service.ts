@@ -2,11 +2,10 @@ import { pool } from "../config/database"
 
 export class SnapshotService {
     static async insertSnapshot(data: any) {
-        const emptyToNull = (v: any) =>
-            v === '' || v === undefined ? null : v;
         const sql = `
             INSERT INTO snapshot (
                 ai,
+                counter,
                 invoice_number,
                 position,
                 invoice_date,
@@ -14,7 +13,6 @@ export class SnapshotService {
                 month_period,
                 dpp,
                 new_sub,
-                modal,
                 description,
                 customer_service_id,
                 customer_id,
@@ -31,14 +29,12 @@ export class SnapshotService {
                 sales_commission,
                 sales_commission_percentage,
                 referral_id,
-                type_sub,
                 type,
                 cross_sell_count,
-                is_adjustment,
-                upgrade_count
+                is_adjustment
             )
             SELECT
-                ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+                ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
             WHERE NOT EXISTS (
                 SELECT 1
                 FROM snapshot s
@@ -49,6 +45,7 @@ export class SnapshotService {
         const params = [
             // INSERT values
             data.ai,
+            data.counter,
             data.invoiceNumber,
             data.position,
             data.invoiceDate,
@@ -56,7 +53,6 @@ export class SnapshotService {
             data.monthPeriod,
             data.dpp,
             data.newSub,
-            data.modal ?? 0,
             data.description,
             data.customerServiceId,
             data.customerId,
@@ -73,11 +69,9 @@ export class SnapshotService {
             data.salesCommission ?? 0,
             data.salesCommissionPercentage ?? 0,
             data.referralId ?? null,
-            emptyToNull(data.typeSub),
             data.type,
             data.crossSellCount ?? 0,
             data.isAdjustment ?? false,
-            data.upgradeCount ?? 0,
 
             // GUARD: PRIMARY KEY
             data.ai
@@ -89,16 +83,32 @@ export class SnapshotService {
     }
 
     static async getSnapshotBySales(salesId: string, startDate: string, endDate: string) {
-        const [rows] = await pool.query(`
-            SELECT s.* 
+        const [rows] = await pool.query(
+            `
+            SELECT
+            s.*
             FROM snapshot s
-            LEFT JOIN adjustment a 
-                ON s.ai = a.ai
+            LEFT JOIN (
+            SELECT a1.*
+            FROM adjustment a1
+            INNER JOIN (
+                SELECT ai, MAX(updated_at) AS max_updated_at
+                FROM adjustment
+                WHERE status = 'accept'
+                GROUP BY ai
+            ) x
+                ON x.ai = a1.ai AND x.max_updated_at = a1.updated_at
+            WHERE a1.status = 'accept'
+            ) a
+            ON s.ai = a.ai
             WHERE s.sales_id = ?
             AND s.paid_date BETWEEN ? AND ?
-             AND NOT (s.is_upgrade = 1 AND s.new_sub > 0 AND s.new_sub < (s.dpp * 0.2))
-             group by s.ai
-        `, [salesId, startDate, endDate]);
+            AND NOT (s.is_upgrade = 1 AND s.new_sub > 0 AND s.new_sub < (s.dpp * 0.2))
+            GROUP BY s.ai
+            `,
+            [salesId, startDate, endDate]
+        );
+
         return rows as any[];
     }
 
@@ -144,22 +154,18 @@ export class SnapshotService {
         return rows as any[];
     }
 
-    static async updateSnapshot(ai: number, data: any, isDeleted: boolean) {
+    static async updateSnapshot(ai: number, adjustmentData: any) {
         const [rows] = await pool.query(`
             UPDATE snapshot
             SET 
-                modal = ?,
                 sales_commission = ?,
                 sales_commission_percentage = ?,
-                is_adjustment = ?,
-                is_deleted = ?
+                is_adjustment = ?
             WHERE ai = ?
         `, [
-            data.modal,
-            data.salesCommission,
-            data.salesCommissionPercentage,
+            adjustmentData.commission,
+            adjustmentData.commission_percentage || adjustmentData.commissionPercentage,
             true,
-            isDeleted,
             ai
         ]);
         return rows;
@@ -167,9 +173,30 @@ export class SnapshotService {
 
     static async getSnapshotByAi(ai: string) {
         const [rows] = await pool.query(`
-            SELECT *
-            FROM snapshot
-            WHERE ai = ?
+            SELECT
+            s.*,
+            a.commission            AS adjustment_commission,
+            a.markup                AS adjustment_markup,
+            a.margin                AS adjustment_margin,
+            a.commission_percentage AS adjustment_commission_percentage,
+            a.note                  AS adjustment_note,
+            a.modal                 AS adjustment_modal,
+            a.price                 AS adjustment_price
+            FROM snapshot s
+            LEFT JOIN (
+            SELECT a1.*
+            FROM adjustment a1
+            INNER JOIN (
+                SELECT ai, MAX(updated_at) AS max_updated_at
+                FROM adjustment
+                WHERE status = 'accept'
+                GROUP BY ai
+            ) x
+                ON x.ai = a1.ai AND x.max_updated_at = a1.updated_at
+            WHERE a1.status = 'accept'
+            ) a
+            ON s.ai = a.ai
+            WHERE s.ai = ?
             LIMIT 1
         `, [ai]);
         return (rows as any[])[0];

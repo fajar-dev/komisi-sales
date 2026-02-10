@@ -15,16 +15,38 @@ export class AdjustmentController {
     async insertAdjustment(c: Context) {
         try {
             const data = await c.req.json();
+            const snapshot = await this.snapshotService.getSnapshotByAi(data.ai);
             const user = c.get('user');
             const employee = await this.employeeService.getEmployeeByEmployeeId(user.sub);
+            const price = Number(data.price || 0);
+            const modal = Number(data.modal || 0);
+            const profit = price - modal;
+
+            let marginPercentage = 0;
+            if (price > 0) {
+                 marginPercentage = (profit / price) * 100;
+            }
+
+            let commissionPercentage = 2.5;
+            if (marginPercentage >= 15) {
+                commissionPercentage = 5;
+            } else if (marginPercentage >= 10) {
+                commissionPercentage = 4;
+            }
+                
+            const commission = snapshot.dpp * (commissionPercentage / 100);
+
             const request = {
                 ai: data.ai,
                 employeeId: user.sub,
                 approvedId: employee?.managerEmployeeId,
-                oldValue: data.oldValue,
-                newValue: data.newValue,
+                markup: profit,
+                modal: modal,
+                price: price,
+                margin: marginPercentage,
+                commissionPercentage: commissionPercentage,
+                commission: commission,
                 note: data.note,
-                action: data.action,
             }
             await this.adjustmentService.insertAdjustment(request);
             return c.json(this.apiResponse.success("Adjustment inserted successfully"));
@@ -49,7 +71,7 @@ export class AdjustmentController {
             const user = c.get('user');
             const result = await this.adjustmentService.acceptAdjustment(id, user.sub);
             if(result){
-                await this.snapshotService.updateSnapshot(result.ai, result.newValue, result.isDeleted);
+                await this.snapshotService.updateSnapshot(result.ai, result);
             }
 
             return c.json(this.apiResponse.success("Adjustment accepted successfully", result));

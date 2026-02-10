@@ -10,10 +10,13 @@ export class AdjustmentService {
                 a.ai, 
                 a.employee_id AS employeeId,
                 a.approved_id AS approvedId,
-                a.old_value AS oldValue,
-                a.new_value AS newValue,
+                a.modal,
+                a.price,
+                a.margin,
+                a.markup,
+                a.commission_percentage,
+                a.commission,
                 a.note,
-                a.action, 
                 a.status, 
                 e.name as requestName, 
                 e.photo_profile as requestPhotoProfile,
@@ -57,12 +60,11 @@ export class AdjustmentService {
             WHERE id = ?
         `, [id]);
 
-        const isDeleted = adjustment.action === 'delete' ? true : false;
 
         return {
             ai: adjustment.ai,
-            newValue: typeof adjustment.new_value === 'string' ? JSON.parse(adjustment.new_value) : adjustment.new_value,
-            isDeleted
+            commission: adjustment.commission,
+            commissionPercentage: adjustment.commission_percentage,
         };
     }
 
@@ -92,22 +94,28 @@ export class AdjustmentService {
                 ai,
                 employee_id,
                 approved_id,
-                old_value,
-                new_value,
+                modal,
+                price,
+                margin,
+                markup,
+                commission_percentage,
+                commission,
                 note,
-                action,
                 status
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             `,
             [
                 data.ai,
                 data.employeeId,
                 data.approvedId,
-                JSON.stringify(data.oldValue),
-                JSON.stringify(data.newValue),
+                data.modal,
+                data.price,
+                data.margin,
+                data.markup,
+                data.commissionPercentage,
+                data.commission,
                 data.note,
-                data.action,
                 'pending',
             ]
         );

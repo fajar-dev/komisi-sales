@@ -109,20 +109,4 @@ export class IsService {
 
         return Number((rows as any[])[0]?.total ?? 0);
     }
-
-    static async getUpgradeCount(custServId: number, currentAi: number): Promise<number> {
-        const query = `
-            SELECT COUNT(nciit.AI) as total
-            FROM NewCustomerInvoiceInternetCounter nciit
-            JOIN NewCustomerInvoice nci ON nciit.AI = nci.AI
-            JOIN CustomerInvoiceTemp cit ON nci.Id = cit.InvoiceNum AND nci.No = cit.Urut
-            JOIN CustomerServices cs ON cs.CustId = nci.CustId AND cs.ServiceId = cit.ServiceId
-            WHERE cs.CustServId = ?
-            AND (nciit.is_upgrade = 1 OR nciit.is_prorata = 1)
-            AND nciit.AI <= ?
-        `;
-
-        const [rows] = await nisPool.query(query, [custServId, currentAi]);
-        return Number((rows as any[])[0]?.total ?? 0);
-    }
 }

@@ -11,8 +11,8 @@ export class SnapshotCrawl {
 
     async crawlInternalInvoice() {
         const { startDate, endDate } = this.periodHelper.getStartAndEndDateForCurrentMonth();
-        const rows = await this.isService.getIinternalByDateRange(startDate, endDate);
-        // const rows = await this.isService.getIinternalByDateRange('2025-12-26', '2026-01-25');
+        // const rows = await this.isService.getIinternalByDateRange(startDate, endDate);
+        const rows = await this.isService.getIinternalByDateRange('2025-12-26', '2026-01-25');
 
         const commissionData = rows.map((row: any) => {
             let isNew = false;
@@ -105,6 +105,7 @@ export class SnapshotCrawl {
 
             return {
                 ai: row.AI,
+                counter: row.counter,
                 invoiceNumber: row.InvoiceNum,
                 position: row.Urut,
                 invoiceDate: row.InvoiceDate,
@@ -112,7 +113,6 @@ export class SnapshotCrawl {
                 monthPeriod,
                 dpp,
                 newSub: row.new_subscription,
-                modal: row.modal,
                 description,
                 customerServiceId: row.CustServId,
                 customerId: row.CustId,
@@ -130,9 +130,7 @@ export class SnapshotCrawl {
                 implementatorId: row.Surveyor,
                 referralId: referral,
                 crossSellCount: row.cross_sell_count,
-                typeSub: null,
                 type: row.BusinessOperation,
-                upgradeCount: 0
             };
         });
 
@@ -141,10 +139,6 @@ export class SnapshotCrawl {
         for (const data of commissionData) {
             if (excludedServices.includes(data.serviceId)) {
                 continue;
-            }
-
-            if (data.isUpgrade) {
-                data.upgradeCount = await this.isService.getUpgradeCount(data.customerServiceId, data.ai);
             }
 
             if (data.serviceGroupId === 'SV' && data.dpp < 500000) {
@@ -157,8 +151,8 @@ export class SnapshotCrawl {
 
     async crawlResellInvoice() {
         const { startDate, endDate } = this.periodHelper.getStartAndEndDateForCurrentMonth();
-        const rows = await this.isService.getResellByDateRange(startDate, endDate);
-        // const rows = await this.isService.getResellByDateRange('2025-12-26', '2026-01-25');
+        // const rows = await this.isService.getResellByDateRange(startDate, endDate);
+        const rows = await this.isService.getResellByDateRange('2025-12-26', '2026-01-25');
 
         const commissionData = rows.map((row: any) => {
             let isNew = false;
@@ -195,13 +189,7 @@ export class SnapshotCrawl {
             const dpp = Number(row.dpp ?? 0);
             const description = String(row.Description ?? "");
 
-            // "termin" sebagai kata utuh, tidak match "terminasi"
-            const hasTermin = /\btermin\b(?!\w)/i.test(description);
-
-            if (hasTermin) {
-                isTermin = true;
-                commissionPercentage = 0;
-            } else if (row.counter > 1 && String(row.new_subscription) === "0.00") {
+            if (row.counter > 1 && String(row.new_subscription) === "0.00") {
                 // Recurring 0.5%
                 commissionPercentage = 0.5;
             } else if (newSubscription > 0) {
@@ -209,12 +197,6 @@ export class SnapshotCrawl {
 
                 if (row.is_prorata === 0 && row.is_upgrade === 0) isNew = true;
                 if (row.is_upgrade === 1 || row.is_prorata === 1) isUpgrade = true;
-            }
-
-            // FORCE RULE: Google Payment Term Plan -> 0 commission
-            // This overrides any previous calculation (recurring, etc.)
-            if (row.GooglePaymentTermPlan) {
-                commissionPercentage = 2.5;
             }
 
             const commissionAmount = dpp * (commissionPercentage / 100);
@@ -226,6 +208,7 @@ export class SnapshotCrawl {
 
             return {
                 ai: row.AI,
+                counter: row.counter,
                 invoiceNumber: row.InvoiceNum,
                 position: row.Urut,
                 invoiceDate: row.InvoiceDate,
@@ -233,7 +216,6 @@ export class SnapshotCrawl {
                 monthPeriod,
                 newSub: row.new_subscription,
                 dpp,
-                modal: row.modal,
                 description,
                 customerServiceId: row.CustServId,
                 customerId: row.CustId,
@@ -251,17 +233,12 @@ export class SnapshotCrawl {
                 implementatorId: row.Surveyor,
                 referralId: referral,
                 crossSellCount: row.cross_sell_count,
-                typeSub: row.GooglePaymentTermPlan,
                 type: row.BusinessOperation,
-                upgradeCount: 0
             };
         });
 
         
         for (const data of commissionData) {
-            if (data.isUpgrade) {
-                data.upgradeCount = await this.isService.getUpgradeCount(data.customerServiceId, data.ai);
-            }
             await this.snapshotService.insertSnapshot(data);
             console.log("Invoice inserted:", data.invoiceNumber);
         }

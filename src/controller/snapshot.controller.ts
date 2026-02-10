@@ -21,6 +21,7 @@ export class SnapshotController {
 
             const data: any[] = result.map((row: any) => ({
             ai: row.ai,
+            counter: row.counter,
             invoiceNumber: row.invoice_number,
             position: row.position,
             invoiceDate: row.invoice_date,
@@ -42,32 +43,45 @@ export class SnapshotController {
             isUpgrade: row.is_upgrade,
             isTermin: row.is_termin,
             isAdjustment: row.is_adjustment,
-            isDeleted: row.is_deleted,
             type: row.type,
-            typeSub: row.type_sub,
             salesCommission: row.sales_commission,
             salesCommissionPercentage: row.sales_commission_percentage,
-            upgradeCount: row.upgrade_count
             }));
 
-            const filteredData = data.filter(inv => {
-                 // if (inv.isUpgrade && inv.upgradeCount > 1) return false;
-                 return true;
-            });
+            const newResellData: any[] = [];
+            let newResellTotalCommission = 0;
+            let newResellTotalDpp = 0;
 
-            let totalCommission = 0;
-            let totalDpp = 0;
+            const otherData: any[] = [];
+            let otherTotalCommission = 0;
+            let otherTotalDpp = 0;
 
-            filteredData.forEach((inv) => {
-                if (!inv.isDeleted) {
-                    totalCommission += Number(inv.salesCommission || 0);
-                    totalDpp += Number(inv.dpp || 0);
+            data.forEach(inv => {
+                const commission = Number(inv.salesCommission || 0);
+                const dpp = Number(inv.dpp || 0);
+
+                if (inv.type === 'resell' && (inv.isNew || inv.isUpgrade)) {
+                    newResellData.push(inv);
+                    newResellTotalCommission += commission;
+                    newResellTotalDpp += dpp;
+                } else {
+                    otherData.push(inv);
+                    otherTotalCommission += commission;
+                    otherTotalDpp += dpp;
                 }
             });
 
+            const totalCommission = newResellTotalCommission + otherTotalCommission;
+            const totalDpp = newResellTotalDpp + otherTotalDpp;
+
             return c.json(
             this.apiResponse.success("Invoice retrived successfuly", {
-                data: filteredData,
+                newResellData,
+                newResellTotalCommission,
+                newResellTotalDpp,
+                otherData,
+                otherTotalCommission,
+                otherTotalDpp,
                 totalCommission,
                 totalDpp,
             })
@@ -109,6 +123,7 @@ export class SnapshotController {
 
             return {
                 ai: row.ai,
+                counter: row.counter,
                 invoiceNumber: row.invoice_number,
                 position: row.position,
                 invoiceDate: row.invoice_date,
@@ -130,9 +145,7 @@ export class SnapshotController {
                 isUpgrade: row.is_upgrade,
                 isTermin: row.is_termin,
                 isAdjustment: row.is_adjustment,
-                isDeleted: row.is_deleted,
                 type: row.type,
-                typeSub: row.type_sub,
                 // renamed fields
                 implementatorCommission,
                 implementatorCommissionPercentage,
@@ -143,10 +156,8 @@ export class SnapshotController {
             let totalDpp = 0;
 
             data.forEach((inv) => {
-                if (!inv.isDeleted) {
-                    totalCommission += Number(inv.implementatorCommission || 0);
-                    totalDpp += Number(inv.dpp || 0);
-                }
+                totalCommission += Number(inv.implementatorCommission || 0);
+                totalDpp += Number(inv.dpp || 0);
             });
 
             return c.json(
@@ -193,9 +204,6 @@ export class SnapshotController {
             // Group snapshots by sales_id and sum commission
             const commissionMap = new Map<string, number>();
             snapshots.forEach((row: any) => {
-                if (row.is_deleted === 1 || row.is_deleted === true) return;
-                // if (row.is_upgrade === 1 && row.upgrade_count > 1) return;
-
                 const salesId = row.sales_id;
                 const commission = parseFloat(row.sales_commission) || 0;
                 const current = commissionMap.get(salesId) || 0;
@@ -231,6 +239,7 @@ export class SnapshotController {
 
             const data = {
                 ai: row.ai,
+                counter: row.counter,
                 invoiceNumber: row.invoice_number,
                 position: row.position,
                 invoiceDate: row.invoice_date,
@@ -253,10 +262,15 @@ export class SnapshotController {
                 isTermin: row.is_termin,
                 isAdjustment: row.is_adjustment,
                 type: row.type,
-                modal: row.modal,
-                typeSub: row.type_sub,
                 salesCommission: row.sales_commission,
                 salesCommissionPercentage: row.sales_commission_percentage,
+                modal: row.adjustment_modal,
+                price: row.adjustment_price,
+                adjustmentCommission: row.adjustment_commission,
+                adjustmentMarkup: row.adjustment_markup,
+                adjustmentMargin: row.adjustment_margin,
+                adjustmentCommissionPercentage: row.adjustment_commission_percentage,
+                adjustmentNote: row.adjustment_note,
             };
             
             return c.json(
