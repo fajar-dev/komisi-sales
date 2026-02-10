@@ -46,6 +46,8 @@ export class SnapshotController {
             type: row.type,
             salesCommission: row.sales_commission,
             salesCommissionPercentage: row.sales_commission_percentage,
+            margin: row.adjustment_margin,
+            markup: row.adjustment_markup,
             }));
 
             const newResellData: any[] = [];
