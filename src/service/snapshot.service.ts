@@ -114,7 +114,10 @@ export class SnapshotService {
             a.commission_percentage AS adjustment_commission_percentage,
             a.note                  AS adjustment_note,
             a.modal                 AS adjustment_modal,
-            a.price                 AS adjustment_price
+            a.price                 AS adjustment_price,
+            e.name                  AS implementator_name,
+            e.employee_id           AS implementator_id,
+            e.photo_profile         AS implementator_photo
             FROM snapshot s
             LEFT JOIN (
             SELECT a1.*
@@ -129,6 +132,8 @@ export class SnapshotService {
             WHERE a1.status = 'accept'
             ) a
             ON s.ai = a.ai
+            LEFT JOIN employee e
+            ON s.implementator_id = e.employee_id
             WHERE s.sales_id = ?
             AND s.paid_date BETWEEN ? AND ?
             AND NOT (s.is_upgrade = 1 AND s.new_sub > 0 AND s.new_sub < (s.dpp * 0.2))
@@ -142,14 +147,20 @@ export class SnapshotService {
 
     static async getSnapshotByImplementator(salesId: string, startDate: string, endDate: string) {
         const [rows] = await pool.query(`
-            SELECT s.*
+             SELECT 
+            s.*,
+            e.name                  AS sales_name,
+            e.employee_id           AS sales_id,
+            e.photo_profile         AS sales_photo
             FROM snapshot s
             LEFT JOIN adjustment a 
                 ON s.ai = a.ai
+            LEFT JOIN employee e
+                ON s.sales_id = e.employee_id
             WHERE s.implementator_id = ?
             AND s.paid_date BETWEEN ? AND ?
             AND s.service_group_id = 'NW'
-            group by s.ai
+            GROUP BY s.ai
         `, [salesId, startDate, endDate]);
         return rows as any[];
     }
