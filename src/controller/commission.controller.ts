@@ -43,6 +43,9 @@ export class CommissionController {
                     let boosterCount = 0;
                     let boosterTotal = 0;
 
+                    let prorateCount = 0;
+                    let prorateTotal = 0;
+
                     let recurringCount = 0;
                     let recurringTotal = 0;
 
@@ -59,11 +62,22 @@ export class CommissionController {
                     let resellRecurringCount = 0; // 0.5%
                     let resellRecurringTotal = 0;
 
+                    let totalMrc = 0;
+                    let totalSubscription = 0;
+
                     rows.forEach((row: any) => {
                         const commissionAmount = toNum(row.sales_commission);
                         const commissionPercentage = toNum(row.sales_commission_percentage);
+                        
+                        totalMrc += toNum(row.mrc);
+                        totalSubscription += toNum(row.dpp);
 
                         // INTERNAL
+                        if (commissionPercentage === 20) {
+                            prorateCount++;
+                            prorateTotal += commissionAmount;
+                            return;
+                        }
                         if (commissionPercentage === 12) {
                             soloCount++;
                             soloTotal += commissionAmount;
@@ -103,7 +117,7 @@ export class CommissionController {
                         }
                     });
 
-                    const totalInternal = soloTotal + boosterTotal + recurringTotal;
+                    const totalInternal = soloTotal + boosterTotal + prorateTotal + recurringTotal;
                     const totalResell =
                         resellMargin15Total +
                         resellMargin10to15Total +
@@ -120,7 +134,10 @@ export class CommissionController {
                             total: round2(periodTotal),
                             totalInternal: round2(totalInternal),
                             totalResell: round2(totalResell),
+                            mrc: round2(totalMrc),
+                            subscription: round2(totalSubscription),
                             internal: [
+                                { name: "Prorate", count: prorateCount, total: round2(prorateTotal) },
                                 { name: "Solo", count: soloCount, total: round2(soloTotal) },
                                 { name: "Booster", count: boosterCount, total: round2(boosterTotal) },
                                 { name: "Recurring", count: recurringCount, total: round2(recurringTotal) },

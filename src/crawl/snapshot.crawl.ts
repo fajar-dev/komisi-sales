@@ -11,8 +11,9 @@ export class SnapshotCrawl {
 
     async crawlInternalInvoice() {
         const { startDate, endDate } = this.periodHelper.getStartAndEndDateForCurrentMonth();
-        const rows = await this.isService.getIinternalByDateRange(startDate, endDate);
         // const rows = await this.isService.getIinternalByDateRange('2025-12-26', '2026-01-25');
+        // const rows = await this.isService.getIinternalByDateRange('2026-01-26', '2026-02-25');
+        const rows = await this.isService.getIinternalByDateRange(startDate, endDate);
 
         const commissionData = rows.map((row: any) => {
             let isNew = false;
@@ -53,34 +54,37 @@ export class SnapshotCrawl {
             const hasTermin = /\btermin\b(?!\w)/i.test(description);
 
             if (hasTermin) {
-            // - terminated = true
-            // - komisi 15% jika ada cross sell, kalau tidak 12%
-            isTermin = true;
-            commissionPercentage = crossSellCount > 0 ? 15 : 12;
+                // - terminated = true
+                // - komisi 15% jika ada cross sell, kalau tidak 12%
+                isTermin = true;
+                commissionPercentage = crossSellCount > 0 ? 15 : 12;
+            } else if (row.is_upgrade === 1 || row.is_prorata === 1) {
+                // RULE: Upgrade internal -> 20%
+                isUpgrade = true;
+                commissionPercentage = 20;
             } else if (row.counter > 1 && String(row.new_subscription) === "0.00") {
-            // RULE #1:
-            // - invoice ulang (counter > 1) & bukan new subscription -> komisi 1%
-            commissionPercentage = 1;
+                // RULE #1:
+                // - invoice ulang (counter > 1) & bukan new subscription -> komisi 1%
+                commissionPercentage = 1;
             } else if (newSubscription > 0 && crossSellCount > 0) {
-            // RULE #2:
-            // - new subscription + ada cross sell -> komisi 15%
-            commissionPercentage = 15;
-
-            // Flag:
-            // - isNew: bukan prorata & bukan upgrade
-            // - isUpgrade: upgrade atau prorata
-            if (row.is_prorata === 0 && row.is_upgrade === 0) isNew = true;
-            if (row.is_upgrade === 1 || row.is_prorata === 1) isUpgrade = true;
+                // RULE #2:
+                // - new subscription + ada cross sell -> komisi 15%
+                commissionPercentage = 15;
+                isNew = true;
             } else if (newSubscription > 0 && crossSellCount === 0) {
-            // RULE #3:
-            // - new subscription + tanpa cross sell -> komisi 12%
-            commissionPercentage = 12;
+                // RULE #3:
+                // - new subscription + tanpa cross sell -> komisi 12%
+                commissionPercentage = 12;
+                isNew = true;
+            }
 
-            // Flag:
-            // - isUpgrade: upgrade atau prorata
-            // - isNew: bukan prorata & bukan upgrade
-            if (row.is_upgrade === 1 || row.is_prorata === 1) isUpgrade = true;
-            if (row.is_prorata === 0 && row.is_upgrade === 0) isNew = true;
+            let mrc = 0;
+            if (isNew || isUpgrade) {
+                if (monthPeriod > 0) {
+                    mrc = dpp / monthPeriod;
+                } else {
+                    mrc = dpp;
+                }
             }
 
             let commissionAmount = 0;
@@ -125,6 +129,7 @@ export class SnapshotCrawl {
                 isNew,
                 isUpgrade,
                 isTermin,
+                mrc,
                 salesCommission: commissionAmount,
                 salesCommissionPercentage: commissionPercentage,
                 implementatorId: row.Surveyor,
@@ -151,8 +156,9 @@ export class SnapshotCrawl {
 
     async crawlResellInvoice() {
         const { startDate, endDate } = this.periodHelper.getStartAndEndDateForCurrentMonth();
-        const rows = await this.isService.getResellByDateRange(startDate, endDate);
         // const rows = await this.isService.getResellByDateRange('2025-12-26', '2026-01-25');
+        // const rows = await this.isService.getResellByDateRange('2026-01-26', '2026-02-25');
+        const rows = await this.isService.getResellByDateRange(startDate, endDate);
 
         const commissionData = rows.map((row: any) => {
             let isNew = false;
@@ -162,25 +168,35 @@ export class SnapshotCrawl {
             
             let monthPeriod = 0;
 
-            if (row.AwalPeriode && row.AkhirPeriode) {
-                const startStr = String(row.AwalPeriode);
-                const endStr = String(row.AkhirPeriode);
+            if (row.is_upgrade === 1 || row.is_prorata === 1) {
+                if (row.InvoicePeriodStart && row.InvoicePeriodEnd) {
+                    const start = new Date(row.InvoicePeriodStart);
+                    const end = new Date(row.InvoicePeriodEnd);
+                    const diffTime = Math.abs(end.getTime() - start.getTime());
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+                    monthPeriod = diffDays / 30;
+                }
+            } else {
+                if (row.AwalPeriode && row.AkhirPeriode) {
+                    const startStr = String(row.AwalPeriode);
+                    const endStr = String(row.AkhirPeriode);
 
-                const startYear = Number(startStr.slice(0, 4));
-                const startMonth = Number(startStr.slice(4, 6));
-                const endYear = Number(endStr.slice(0, 4));
-                const endMonth = Number(endStr.slice(4, 6));
+                    const startYear = Number(startStr.slice(0, 4));
+                    const startMonth = Number(startStr.slice(4, 6));
+                    const endYear = Number(endStr.slice(0, 4));
+                    const endMonth = Number(endStr.slice(4, 6));
 
-                if (
-                    Number.isFinite(startYear) &&
-                    Number.isFinite(startMonth) &&
-                    Number.isFinite(endYear) &&
-                    Number.isFinite(endMonth)
-                ) {
-                    monthPeriod =
-                        (endYear - startYear) * 12 +
-                        (endMonth - startMonth) +
-                        1;
+                    if (
+                        Number.isFinite(startYear) &&
+                        Number.isFinite(startMonth) &&
+                        Number.isFinite(endYear) &&
+                        Number.isFinite(endMonth)
+                    ) {
+                        monthPeriod =
+                            (endYear - startYear) * 12 +
+                            (endMonth - startMonth) +
+                            1;
+                    }
                 }
             }
 
@@ -197,6 +213,15 @@ export class SnapshotCrawl {
 
                 if (row.is_prorata === 0 && row.is_upgrade === 0) isNew = true;
                 if (row.is_upgrade === 1 || row.is_prorata === 1) isUpgrade = true;
+            }
+
+            let mrc = 0;
+            if (isNew || isUpgrade) {
+                if (monthPeriod > 0) {
+                    mrc = dpp / monthPeriod;
+                } else {
+                    mrc = dpp;
+                }
             }
 
             const commissionAmount = dpp * (commissionPercentage / 100);
@@ -228,6 +253,7 @@ export class SnapshotCrawl {
                 isNew,
                 isUpgrade,
                 isTermin,
+                mrc,
                 salesCommission: commissionAmount,
                 salesCommissionPercentage: commissionPercentage,
                 implementatorId: row.Surveyor,

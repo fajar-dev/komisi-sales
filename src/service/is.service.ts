@@ -50,7 +50,7 @@ export class IsService {
             SELECT 
                 nciit.AI, nciit.counter, nciit.new_subscription, nciit.dpp, 
                 nciit.is_prorata, nciit.is_upgrade, nciit.trx_date,
-                cit.InvoiceNum, cit.AwalPeriode, cit.AkhirPeriode, 
+                cit.InvoiceNum, cit.AwalPeriode, cit.AkhirPeriode, cit.InvoicePeriodStart, cit.InvoicePeriodEnd,
                 IFNULL(citc.InvoiceDate, cit.InvoiceDate) as InvoiceDate, 
                 cs.CustServId, cs.SalesId, cs.ManagerSalesId,
                 c.CustId, c.CustCompany, 

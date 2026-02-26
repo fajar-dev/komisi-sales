@@ -25,6 +25,7 @@ export class SnapshotService {
                 is_new,
                 is_upgrade,
                 is_termin,
+                mrc,
                 implementator_id,
                 sales_commission,
                 sales_commission_percentage,
@@ -34,7 +35,7 @@ export class SnapshotService {
                 is_adjustment
             )
             VALUES (
-                ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+                ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
             )
             ON DUPLICATE KEY UPDATE
                 counter                     = IF(is_adjustment = 1, counter, VALUES(counter)),
@@ -57,6 +58,7 @@ export class SnapshotService {
                 is_new                      = IF(is_adjustment = 1, is_new, VALUES(is_new)),
                 is_upgrade                  = IF(is_adjustment = 1, is_upgrade, VALUES(is_upgrade)),
                 is_termin                   = IF(is_adjustment = 1, is_termin, VALUES(is_termin)),
+                mrc                         = IF(is_adjustment = 1, mrc, VALUES(mrc)),
                 implementator_id            = IF(is_adjustment = 1, implementator_id, VALUES(implementator_id)),
                 sales_commission            = IF(is_adjustment = 1, sales_commission, VALUES(sales_commission)),
                 sales_commission_percentage = IF(is_adjustment = 1, sales_commission_percentage, VALUES(sales_commission_percentage)),
@@ -89,6 +91,7 @@ export class SnapshotService {
             data.isNew ?? false,
             data.isUpgrade ?? false,
             data.isTermin ?? false,
+            data.mrc ?? 0,
             data.implementatorId ?? null,
             data.salesCommission ?? 0,
             data.salesCommissionPercentage ?? 0,

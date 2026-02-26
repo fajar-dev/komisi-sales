@@ -5,7 +5,7 @@ CREATE TABLE snapshot (
     position INT NULL,
     invoice_date TIMESTAMP NULL,
     paid_date TIMESTAMP NULL,
-    month_period INT NULL,
+    month_period DECIMAL(15, 1) NULL,
     dpp DECIMAL(15, 2) NULL,
     new_sub DECIMAL(15, 2) NULL,
     description TEXT NULL,
@@ -21,12 +21,13 @@ CREATE TABLE snapshot (
     is_upgrade BOOLEAN NOT NULL DEFAULT false,
     is_termin BOOLEAN NOT NULL DEFAULT false,
     implementator_id VARCHAR(20) NULL,
+    mrc DECIMAL(15, 2) NULL,
     sales_commission DECIMAL(15, 2) NULL,
     sales_commission_percentage DECIMAL(5, 2) NULL,
     referral_id VARCHAR(20) NULL,
     type ENUM('internal', 'resell') NOT NULL,
     cross_sell_count INT NOT NULL DEFAULT 0,
-    is_adjustment BOOLEAN NOT NULL DEFAULT false,
+    is_adjustment BOOLEAN NOT NULL DEFAULT false
 );
 
 CREATE TABLE adjustment (

@@ -28,6 +28,7 @@ export class SnapshotController {
             paidDate: row.paid_date,
             monthPeriod: row.month_period,
             dpp: row.dpp,
+            mrc: row.mrc,
             implementator: {
                 name: row.implementator_name,
                 id: row.implementator_id,
