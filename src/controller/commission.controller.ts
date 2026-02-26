@@ -304,23 +304,33 @@ export class CommissionController {
                     rows = await this.snapshotService.getSnapshotBySalesIds(staffIds, startDate, endDate);
                 }
 
-                const salesMap = new Map<string, { name: string, count: number, total: number }>();
+                const salesMap = new Map<string, { name: string, count: number, total: number, mrc: number, subscription: number }>();
 
                 staffRows.forEach((staff: any) => {
                     const name = staff.name || staff.employee_id;
-                    salesMap.set(name, { name: name, count: 0, total: 0 });
+                    salesMap.set(name, { name: name, count: 0, total: 0, mrc: 0, subscription: 0 });
                 });
 
                 (rows as any[]).forEach((row: any) => {                    
                     const salesName = row.name || row.sales_id; 
                     const commissionAmount = parseFloat(row.sales_commission || 0);
+                    const mrc = parseFloat(row.mrc || 0);
+                    const dpp = parseFloat(row.dpp || 0);
 
                     if (salesMap.has(salesName)) {
                         const salesData = salesMap.get(salesName)!;
                         salesData.count++;
                         salesData.total += commissionAmount;
+                        salesData.mrc += mrc;
+                        salesData.subscription += dpp;
                     } else {
-                        salesMap.set(salesName, { name: salesName, count: 1, total: commissionAmount });
+                        salesMap.set(salesName, { 
+                            name: salesName, 
+                            count: 1, 
+                            total: commissionAmount,
+                            mrc: mrc,
+                            subscription: dpp
+                        });
                     }
                 });
 
@@ -332,7 +342,9 @@ export class CommissionController {
                     detail.push({
                         name: value.name,
                         count: value.count,
-                        total: roundedTotal
+                        total: roundedTotal,
+                        mrc: Math.round(value.mrc * 100) / 100,
+                        subscription: Math.round(value.subscription * 100) / 100
                     });
                     monthTotal += roundedTotal;
                 });
