@@ -45,6 +45,20 @@ export class SnapshotCrawl {
                 }
             }
 
+            // Selisih bulan dari aktivasi ke awal periode invoice
+            let activationMonthDiff = -1;
+            if (row.CustActivationDate && row.AwalPeriode) {
+                const activationDate = new Date(row.CustActivationDate);
+                const startStr = String(row.AwalPeriode);
+                const startYear = Number(startStr.slice(0, 4));
+                const startMonth = Number(startStr.slice(4, 6));
+
+                if (Number.isFinite(startYear) && Number.isFinite(startMonth)) {
+                    activationMonthDiff = (startYear - activationDate.getFullYear()) * 12 +
+                        (startMonth - (activationDate.getMonth() + 1));
+                }
+            }
+
             const newSubscription = Number(row.new_subscription ?? 0);
             const crossSellCount = Number(row.cross_sell_count ?? 0);
             const dpp = Number(row.dpp ?? 0);
@@ -53,28 +67,58 @@ export class SnapshotCrawl {
             // "termin" sebagai kata utuh, tidak match "terminasi"
             const hasTermin = /\btermin\b(?!\w)/i.test(description);
 
-            if (hasTermin) {
-                // - terminated = true
-                // - komisi 15% jika ada cross sell, kalau tidak 12%
-                isTermin = true;
-                commissionPercentage = crossSellCount > 0 ? 15 : 12;
-            } else if (row.is_upgrade === 1 || row.is_prorata === 1) {
+            if (row.is_upgrade === 1 || row.is_prorata === 1) {
                 // RULE: Upgrade internal -> 20%
                 isUpgrade = true;
                 commissionPercentage = 20;
+            } else if (row.ServiceLevel === 'NW' && row.is_upgrade === 0) {
+                // RULE: Khusus NW internal
+                if (monthPeriod >= 12) {
+                    // Jika periode >= 12 bulan (misal kontrak tahunan), langsung NEW (Tidak boleh Termin)
+                    isNew = true;
+                    isTermin = false;
+                    isUpgrade = false;
+                    commissionPercentage = crossSellCount > 0 ? 15 : 12;
+                } else if (activationMonthDiff === 0) {
+                    // Invoice pertama (Bulan ke-0)
+                    isNew = true;
+                    isTermin = false;
+                    isUpgrade = false;
+                    commissionPercentage = crossSellCount > 0 ? 15 : 12;
+                } else if (activationMonthDiff > 0 && activationMonthDiff < 12) {
+                    // Invoice ke-2 s/d bulan ke-12 (Bulan 1-11)
+                    isNew = false;
+                    isTermin = true;
+                    isUpgrade = false;
+                    commissionPercentage = crossSellCount > 0 ? 15 : 12;
+                } else if (activationMonthDiff >= 12) {
+                    // Lewat 12 bulan -> 1% recurring
+                    isNew = false;
+                    isTermin = false;
+                    isUpgrade = false;
+                    commissionPercentage = 1;
+                } else if (hasTermin) {
+                    // Jika tidak ada data aktivasi tapi ada keyword termin dan period < 12
+                    isNew = false;
+                    isTermin = true;
+                    isUpgrade = false;
+                    commissionPercentage = crossSellCount > 0 ? 15 : 12;
+                } else {
+                    // Default NW: 1% jika tidak memenuhi syarat di atas
+                    commissionPercentage = 1;
+                }
+            } else if (hasTermin) {
+                // RULE: Invoice dengan keyword "termin" (Selain NW atau NW yang tidak kena date rule)
+                isTermin = true;
+                isNew = false;
+                isUpgrade = false;
+                commissionPercentage = crossSellCount > 0 ? 15 : 12;
             } else if (row.counter > 1 && String(row.new_subscription) === "0.00") {
-                // RULE #1:
-                // - invoice ulang (counter > 1) & bukan new subscription -> komisi 1%
+                // RULE #1: Recurring -> 1%
                 commissionPercentage = 1;
-            } else if (newSubscription > 0 && crossSellCount > 0) {
-                // RULE #2:
-                // - new subscription + ada cross sell -> komisi 15%
-                commissionPercentage = 15;
-                isNew = true;
-            } else if (newSubscription > 0 && crossSellCount === 0) {
-                // RULE #3:
-                // - new subscription + tanpa cross sell -> komisi 12%
-                commissionPercentage = 12;
+            } else if (newSubscription > 0) {
+                // RULE #2 & #3: New Subscription
+                commissionPercentage = crossSellCount > 0 ? 15 : 12;
                 isNew = true;
             }
 

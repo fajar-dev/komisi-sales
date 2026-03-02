@@ -8,7 +8,7 @@ export class IsService {
                 nciit.AI, nciit.counter, nciit.new_subscription, nciit.dpp, nciit.is_prorata, nciit.is_upgrade, nciit.trx_date,
                 cit.InvoiceNum, cit.AwalPeriode, cit.AkhirPeriode, 
                 IFNULL(citc.InvoiceDate, cit.InvoiceDate) as InvoiceDate, 
-                cs.CustServId, cs.SalesId, cs.ManagerSalesId,
+                cs.CustServId, cs.SalesId, cs.ManagerSalesId, cs.CustActivationDate,
                 c.CustId, c.CustCompany, 
                 s.ServiceId, s.ServiceType, s.ServiceLevel, s.BusinessOperation,
                 c.Surveyor,
