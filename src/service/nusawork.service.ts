@@ -88,7 +88,8 @@ export class Nusawork {
         const accountManager = employees.filter((emp: any) =>
             emp.employee_id === '0202589' ||
             emp.employee_id === '0200306' ||
-            emp.employee_id === '0201325'
+            emp.employee_id === '0201325' ||
+            emp.employee_id === '0209901'
         )
 
         return accountManager.map((emp: any) => ({

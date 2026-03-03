@@ -12,8 +12,8 @@ export class SnapshotCrawl {
     async crawlInternalInvoice() {
         const { startDate, endDate } = this.periodHelper.getStartAndEndDateForCurrentMonth();
         // const rows = await this.isService.getIinternalByDateRange('2025-12-26', '2026-01-25');
-        // const rows = await this.isService.getIinternalByDateRange('2026-01-26', '2026-02-25');
-        const rows = await this.isService.getIinternalByDateRange(startDate, endDate);
+        const rows = await this.isService.getIinternalByDateRange('2026-01-26', '2026-02-25');
+        // const rows = await this.isService.getIinternalByDateRange(startDate, endDate);
 
         const commissionData = rows.map((row: any) => {
             let isNew = false;
@@ -59,6 +59,25 @@ export class SnapshotCrawl {
                 }
             }
 
+            let isUnderContract = false;
+            if (row.contract_until && row.AwalPeriode) {
+                const contractDate = new Date(row.contract_until);
+                if (!isNaN(contractDate.getTime())) {
+                    contractDate.setHours(23, 59, 59, 999);
+                    const startStr = String(row.AwalPeriode);
+                    const startYear = Number(startStr.slice(0, 4));
+                    const startMonth = Number(startStr.slice(4, 6));
+                    const startDay = startStr.length >= 8 ? Number(startStr.slice(6, 8)) : 1;
+
+                    if (Number.isFinite(startYear) && Number.isFinite(startMonth)) {
+                        const awalDate = new Date(startYear, startMonth - 1, startDay);
+                        if (awalDate <= contractDate) {
+                            isUnderContract = true;
+                        }
+                    }
+                }
+            }
+
             const newSubscription = Number(row.new_subscription ?? 0);
             const crossSellCount = Number(row.cross_sell_count ?? 0);
             const dpp = Number(row.dpp ?? 0);
@@ -85,20 +104,20 @@ export class SnapshotCrawl {
                     isTermin = false;
                     isUpgrade = false;
                     commissionPercentage = crossSellCount > 0 ? 15 : 12;
-                } else if (activationMonthDiff > 0 && activationMonthDiff < 12) {
-                    // Invoice ke-2 s/d bulan ke-12 (Bulan 1-11)
+                } else if (isUnderContract && activationMonthDiff > 0) {
+                    // Invoice ke-2 dst (Masih masa kontrak)
                     isNew = false;
                     isTermin = true;
                     isUpgrade = false;
                     commissionPercentage = crossSellCount > 0 ? 15 : 12;
-                } else if (activationMonthDiff >= 12) {
-                    // Lewat 12 bulan -> 1% recurring
+                } else if (!isUnderContract && activationMonthDiff > 0) {
+                    // Lewat masa kontrak -> 1% recurring
                     isNew = false;
                     isTermin = false;
                     isUpgrade = false;
                     commissionPercentage = 1;
                 } else if (hasTermin) {
-                    // Jika tidak ada data aktivasi tapi ada keyword termin dan period < 12
+                    // Jika tidak ada data aktivasi tapi ada keyword termin
                     isNew = false;
                     isTermin = true;
                     isUpgrade = false;
@@ -201,8 +220,8 @@ export class SnapshotCrawl {
     async crawlResellInvoice() {
         const { startDate, endDate } = this.periodHelper.getStartAndEndDateForCurrentMonth();
         // const rows = await this.isService.getResellByDateRange('2025-12-26', '2026-01-25');
-        // const rows = await this.isService.getResellByDateRange('2026-01-26', '2026-02-25');
-        const rows = await this.isService.getResellByDateRange(startDate, endDate);
+        const rows = await this.isService.getResellByDateRange('2026-01-26', '2026-02-25');
+        // const rows = await this.isService.getResellByDateRange(startDate, endDate);
 
         const commissionData = rows.map((row: any) => {
             let isNew = false;
