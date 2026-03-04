@@ -29,6 +29,7 @@ export class IsService {
             LEFT JOIN (
                 SELECT CustServId, MIN(ContractUntil) AS ContractUntil
                 FROM CustomerServicesHistory
+                WHERE ContractUntil IS NOT NULL
                 GROUP BY CustServId
             ) AS csh 
                 ON csh.CustServId = cs.CustServId
