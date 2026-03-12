@@ -12,8 +12,8 @@ export class SnapshotCrawl {
     async crawlInternalInvoice() {
         const { startDate, endDate } = this.periodHelper.getStartAndEndDateForCurrentMonth();
         // const rows = await this.isService.getIinternalByDateRange('2025-12-26', '2026-01-25');
-        const rows = await this.isService.getIinternalByDateRange('2026-01-26', '2026-02-25');
-        // const rows = await this.isService.getIinternalByDateRange(startDate, endDate);
+        const rows = await this.isService.getIinternalByDateRange(startDate, endDate);
+        // const rows = await this.isService.getIinternalByDateRange('2026-01-26', '2026-02-25');
 
         const commissionData = rows.map((row: any) => {
             let isNew = false;
@@ -220,8 +220,8 @@ export class SnapshotCrawl {
     async crawlResellInvoice() {
         const { startDate, endDate } = this.periodHelper.getStartAndEndDateForCurrentMonth();
         // const rows = await this.isService.getResellByDateRange('2025-12-26', '2026-01-25');
-        const rows = await this.isService.getResellByDateRange('2026-01-26', '2026-02-25');
-        // const rows = await this.isService.getResellByDateRange(startDate, endDate);
+        // const rows = await this.isService.getResellByDateRange('2026-01-26', '2026-02-25');
+        const rows = await this.isService.getResellByDateRange(startDate, endDate);
 
         const commissionData = rows.map((row: any) => {
             let isNew = false;
